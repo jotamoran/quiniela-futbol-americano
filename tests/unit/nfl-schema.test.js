@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 const sql = readFileSync(new URL('../../supabase/migrations/202609140001_nfl.sql', import.meta.url), 'utf8');
 const providerSql = readFileSync(new URL('../../supabase/migrations/202609150001_nfl_provider.sql', import.meta.url), 'utf8');
 const rulesSql = readFileSync(new URL('../../supabase/migrations/202609150002_reglas_admin.sql', import.meta.url), 'utf8');
+const securitySql = readFileSync(new URL('../../supabase/migrations/202609150003_nfl_seguridad_y_cierre.sql', import.meta.url), 'utf8');
+const authConfig = readFileSync(new URL('../../supabase/config.toml', import.meta.url), 'utf8');
 
 describe('contrato del esquema NFL', () => {
   it('crea las entidades de temporada y una temporada inicial', () => {
@@ -39,5 +41,18 @@ describe('contrato del esquema NFL', () => {
     expect(rulesSql).toContain('juego_underdog_unico');
     expect(rulesSql).toContain('cercanos=1');
     expect(rulesSql).not.toMatch(/drop\s+(table|schema)/i);
+  });
+
+  it('refuerza cierre, pagos y modo histórico', () => {
+    expect(securitySql).toContain("interval '5 minutes'");
+    expect(securitySql).toContain('proteger_temporada_historica');
+    expect(securitySql).toContain('proteger_semana_historica');
+    expect(securitySql).toContain('proteger_juego_historico');
+    expect(securitySql).toContain('fecha límite de pago ya terminó');
+  });
+
+  it('configura el código de correo en seis dígitos', () => {
+    expect(authConfig).toContain('enable_confirmations = true');
+    expect(authConfig).toContain('otp_length = 6');
   });
 });

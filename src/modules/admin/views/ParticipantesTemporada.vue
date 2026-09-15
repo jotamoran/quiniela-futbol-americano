@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { alertaError, alertaExito } from '@/lib/alertas';
-import { actualizarParticipante, listarParticipantes, obtenerTemporadaActiva } from '@/services/nflService';
+import { actualizarParticipante, listarParticipantes, obtenerTemporadaActual } from '@/services/nflService';
 
 const temporada = ref(null);
 const participantes = ref([]);
@@ -14,7 +14,7 @@ const participantesVisibles = computed(() => {
 });
 
 async function cargar() {
-  temporada.value = await obtenerTemporadaActiva();
+  temporada.value = await obtenerTemporadaActual();
   participantes.value = temporada.value ? await listarParticipantes(temporada.value.id) : [];
 }
 async function guardar(item) {

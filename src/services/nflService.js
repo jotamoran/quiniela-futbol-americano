@@ -6,6 +6,12 @@ export async function obtenerTemporadaActiva() {
   return data;
 }
 
+export async function obtenerTemporadaActual() {
+  const { data, error } = await supabase.from('temporadas').select('*').order('anio', { ascending: false }).limit(1).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function obtenerDatosBancariosNFL() {
   const { data, error } = await supabase.from('datos_bancarios').select('banco, clabe, titular').eq('id', 1).maybeSingle();
   if (error) throw error;
@@ -128,5 +134,15 @@ export async function guardarResultados(semanaId, resultados) {
 
 export async function configurarJuego(juegoId, { underdog, cancelado }) {
   const { error } = await supabase.rpc('nfl_configurar_juego', { p_juego: juegoId, p_underdog: underdog, p_cancelado: cancelado });
+  if (error) throw error;
+}
+
+export async function finalizarSemana(semanaId) {
+  const { error } = await supabase.rpc('nfl_finalizar', { p_semana: semanaId, p_temporada: null });
+  if (error) throw error;
+}
+
+export async function finalizarTemporada(temporadaId) {
+  const { error } = await supabase.rpc('nfl_finalizar', { p_semana: null, p_temporada: temporadaId });
   if (error) throw error;
 }

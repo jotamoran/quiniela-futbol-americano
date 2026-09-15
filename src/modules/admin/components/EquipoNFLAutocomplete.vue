@@ -8,20 +8,31 @@ const listaId = `equipos-lista-${useId()}`;
 const query = ref(props.modelValue?.name ?? '');
 const options = ref([]);
 const loading = ref(false);
+const error = ref('');
 const opcionActiva = ref(-1);
 let timer;
+let solicitud = 0;
 let suppressNextSearch = false;
 
 watch(() => props.modelValue, (value) => { if (value?.name !== query.value) query.value = value?.name ?? ''; });
 watch(query, (value) => {
   clearTimeout(timer);
   opcionActiva.value = -1;
+  error.value = '';
   if (suppressNextSearch) { suppressNextSearch = false; options.value = []; return; }
   if (value !== props.modelValue?.name) emit('update:modelValue', value.trim() ? { name: value.trim(), logo: null, manual: true } : null);
   if (value.trim().length < 2) { options.value = []; return; }
   timer = setTimeout(async () => {
+    const solicitudActual = ++solicitud;
     loading.value = true;
-    try { options.value = (await buscarEquiposNFL(value.trim())).teams; } catch { options.value = []; } finally { loading.value = false; }
+    try {
+      const respuesta = await buscarEquiposNFL(value.trim());
+      if (solicitudActual === solicitud) options.value = respuesta.teams;
+    } catch (e) {
+      if (solicitudActual === solicitud) { options.value = []; error.value = e.message || 'No se pudo consultar el catálogo.'; }
+    } finally {
+      if (solicitudActual === solicitud) loading.value = false;
+    }
   }, 400);
 });
 
@@ -48,10 +59,10 @@ onUnmounted(() => clearTimeout(timer));
 <template>
   <label class="relative block text-sm font-semibold">
     {{ label }}
-    <div class="relative mt-1"><img v-if="modelValue?.logo" :src="modelValue.logo" alt="" class="absolute left-3 top-1/2 h-7 w-7 -translate-y-1/2 object-contain" /><input v-model="query" role="combobox" aria-autocomplete="list" :aria-expanded="Boolean(options.length)" :aria-controls="listaId" :aria-activedescendant="opcionActiva >= 0 ? `${listaId}-opcion-${options[opcionActiva].id}` : undefined" :aria-busy="loading" autocomplete="off" @keydown="manejarTecla" class="form-control pr-10" :class="modelValue?.logo ? 'pl-12' : ''" :placeholder="loading ? 'Buscando…' : 'Busca un equipo NFL'" /><span v-if="loading" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400" aria-hidden="true">•••</span></div>
+    <div class="relative mt-1"><img v-if="modelValue?.logo" :src="modelValue.logo" alt="" loading="lazy" decoding="async" class="absolute left-3 top-1/2 h-7 w-7 -translate-y-1/2 object-contain" /><input v-model="query" role="combobox" aria-autocomplete="list" :aria-expanded="Boolean(options.length)" :aria-controls="listaId" :aria-activedescendant="opcionActiva >= 0 ? `${listaId}-opcion-${options[opcionActiva].id}` : undefined" :aria-busy="loading" autocomplete="off" @keydown="manejarTecla" class="form-control pr-10" :class="modelValue?.logo ? 'pl-12' : ''" :placeholder="loading ? 'Buscando…' : 'Busca un equipo NFL'" /><span v-if="loading" class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400" aria-hidden="true">•••</span></div>
     <ul v-if="options.length" :id="listaId" role="listbox" class="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-gray-200 bg-white p-1 shadow-xl">
       <li v-for="(team, index) in options" :id="`${listaId}-opcion-${team.id}`" :key="team.id" role="option" :aria-selected="index === opcionActiva"><button type="button" @click="select(team)" class="flex min-h-11 w-full items-center gap-3 rounded-lg p-2 text-left" :class="index === opcionActiva ? 'bg-blue-50' : 'hover:bg-blue-50'"><img v-if="team.logo" :src="team.logo" alt="" loading="lazy" decoding="async" class="h-8 w-8 object-contain" /><span>{{ team.name }}</span></button></li>
     </ul>
-    <span v-if="query.length >= 2 && modelValue?.manual && !loading && !options.length" class="mt-1 block text-xs font-normal text-gray-500">Puedes conservar el nombre escrito si el equipo no aparece.</span>
+      <span v-if="error" role="alert" class="mt-1 block text-xs font-normal text-red-700">{{ error }} Puedes conservar el nombre escrito.</span><span v-else-if="query.length >= 2 && modelValue?.manual && !loading && !options.length" class="mt-1 block text-xs font-normal text-gray-500">Puedes conservar el nombre escrito si el equipo no aparece.</span>
   </label>
 </template>

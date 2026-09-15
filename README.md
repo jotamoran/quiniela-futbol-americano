@@ -16,7 +16,9 @@ Plataforma de quinielas NFL por temporada (Vue 3 + Tailwind + Supabase + Vercel)
 4. Para un proyecto real en supabase.com: `npx supabase link` y `npx supabase db push`.
 5. Después de registrar la primera cuenta, asígnale el rol de administrador desde el editor SQL: `update public.perfiles set rol = 'admin' where username = 'TU_USUARIO';`.
 
-El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accidente el modelo de fútbol soccer. Las migraciones son la fuente vigente. En una base existente aplica `supabase/migrations/202609150001_nfl_provider.sql` y después `supabase/migrations/202609150002_reglas_admin.sql`. Ambas son seguras para reintentar si una ejecución anterior quedó incompleta.
+El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accidente el modelo de fútbol soccer. Las migraciones son la fuente vigente. En una base existente aplica, en orden, `supabase/migrations/202609150001_nfl_provider.sql`, `supabase/migrations/202609150002_reglas_admin.sql` y `supabase/migrations/202609150003_nfl_seguridad_y_cierre.sql`.
+
+La verificación de correo está habilitada y usa exactamente seis dígitos. El proyecto local ya lo define en `supabase/config.toml`; en el proyecto hospedado confirma en Authentication → Email que la confirmación de correo esté activa, **OTP length** sea `6` y la plantilla use el token de Supabase.
 
 ## Calendario y resultados NFL
 

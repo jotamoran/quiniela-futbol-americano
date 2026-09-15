@@ -10,8 +10,12 @@ export default async function handler(req, res) {
     if (!/^[0-9a-f-]{36}$/i.test(String(weekId ?? ''))) throw new ErrorHttp(400, 'Semana inválida');
 
     const supabase = getSupabaseAdmin();
+    const { data: semana, error: semanaError } = await supabase.from('semanas').select('estado').eq('id', weekId).maybeSingle();
+    if (semanaError) throw semanaError;
+    if (!semana) throw new ErrorHttp(404, 'Semana no encontrada');
+    if (semana.estado === 'finalizada') throw new ErrorHttp(409, 'La semana ya es de solo consulta');
     const { data: games, error } = await supabase.from('juegos')
-      .select('id, external_event_id')
+      .select('id, external_event_id, estado, puntos_local, puntos_visitante')
       .eq('semana_id', weekId)
       .eq('provider', NFL_PROVIDER)
       .not('external_event_id', 'is', null)
@@ -23,10 +27,13 @@ export default async function handler(req, res) {
     for (const game of games ?? []) {
       const result = results.get(String(game.external_event_id));
       if (!result) continue;
+      if (game.estado === 'finalizado' && result.estado !== 'finalizado') continue;
+      if (result.estado === 'finalizado' && (!Number.isInteger(result.homeScore) || !Number.isInteger(result.awayScore))) continue;
+      if (result.estado === game.estado && result.homeScore === game.puntos_local && result.awayScore === game.puntos_visitante) continue;
       const { error: updateError } = await supabase.from('juegos').update({
-        puntos_local: result.homeScore,
-        puntos_visitante: result.awayScore,
-        estado: 'finalizado',
+        puntos_local: result.homeScore ?? null,
+        puntos_visitante: result.awayScore ?? null,
+        estado: result.estado,
       }).eq('id', game.id).eq('semana_id', weekId);
       if (updateError) throw updateError;
       updated += 1;

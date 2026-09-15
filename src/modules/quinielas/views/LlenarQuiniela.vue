@@ -1,9 +1,9 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
 import { useLoginModalStore } from '@/store/loginModal';
-import { alertaError, alertaExito } from '@/lib/alertas';
+import { alertaError, alertaExito, confirmarAccion } from '@/lib/alertas';
 import { fechaHoraCDMX } from '@/lib/fechas';
 import TarjetaPartido from '../components/TarjetaPartido.vue';
 import { guardarPronosticos, inscribirse, obtenerJuegos, obtenerMiPronostico, obtenerParticipacion, obtenerSemana } from '@/services/nflService';
@@ -21,6 +21,8 @@ const total = ref('');
 const cargando = ref(true);
 const guardando = ref(false);
 const error = ref('');
+const tiempoRestante = ref(null);
+let intervalo;
 const cerrado = computed(() => !semana.value || new Date(semana.value.fecha_cierre) <= new Date() || semana.value.estado !== 'abierta');
 const juegosActivos = computed(() => juegos.value.filter(j => j.estado !== 'cancelado'));
 const seleccionados = computed(() => juegosActivos.value.filter(j => elecciones.value[j.id]).length);
@@ -28,6 +30,38 @@ const faltantes = computed(() => Math.max(juegosActivos.value.length - seleccion
 const porcentaje = computed(() => juegosActivos.value.length ? Math.round((seleccionados.value / juegosActivos.value.length) * 100) : 0);
 const totalValido = computed(() => total.value !== '' && Number.isInteger(Number(total.value)) && Number(total.value) >= 0 && Number(total.value) <= 400);
 const completo = computed(() => seleccionados.value === juegosActivos.value.length && Boolean(underdogId.value) && totalValido.value);
+const urgencia = computed(() => {
+  if (!tiempoRestante.value || tiempoRestante.value.vencido) return 'cerrada';
+  const minutos = tiempoRestante.value.dias * 1440 + tiempoRestante.value.horas * 60 + tiempoRestante.value.minutos;
+  if (minutos < 30) return 'critica';
+  if (minutos < 120) return 'alta';
+  return minutos < 1440 ? 'media' : 'normal';
+});
+const hayCambiosPendientes = computed(() => Boolean(auth.isLoggedIn && !cerrado.value && (seleccionados.value > 0 || total.value !== '')));
+
+function actualizarTiempo() {
+  if (!semana.value) { tiempoRestante.value = null; return; }
+  const diferencia = new Date(semana.value.fecha_cierre).getTime() - Date.now();
+  const segundos = Math.max(0, Math.floor(diferencia / 1000));
+  tiempoRestante.value = {
+    vencido: diferencia <= 0,
+    dias: Math.floor(segundos / 86400),
+    horas: Math.floor((segundos % 86400) / 3600),
+    minutos: Math.floor((segundos % 3600) / 60),
+    segundos: segundos % 60,
+  };
+}
+
+function advertirAntesDeSalir(evento) {
+  if (!hayCambiosPendientes.value || guardando.value) return;
+  evento.preventDefault();
+  evento.returnValue = '';
+}
+
+async function confirmarSalida() {
+  if (!hayCambiosPendientes.value || guardando.value) return true;
+  return confirmarAccion({ title: 'Salir de la quiniela', text: 'Perderás los pronósticos que aún no has guardado.', confirmText: 'Salir', danger: true });
+}
 
 async function cargar() {
   semana.value = null;
@@ -40,7 +74,8 @@ async function cargar() {
   juegos.value = await obtenerJuegos(semana.value.id);
   if (!auth.isLoggedIn) return;
   participacion.value = await obtenerParticipacion(semana.value.temporada_id);
-  if (!participacion.value) participacion.value = { id: await inscribirse(semana.value.temporada_id), estado_pago: 'pendiente' };
+  if (!participacion.value && !cerrado.value) participacion.value = { id: await inscribirse(semana.value.temporada_id), estado_pago: 'pendiente' };
+  if (!participacion.value) return;
   const existente = await obtenerMiPronostico(semana.value.id, participacion.value.id);
   if (existente) {
     elecciones.value = existente.elecciones;
@@ -62,13 +97,19 @@ async function guardar() {
 onMounted(async () => {
   try { await cargar(); } catch (e) { error.value = e.message; }
   finally { cargando.value = false; }
+  actualizarTiempo();
+  intervalo = setInterval(actualizarTiempo, 1000);
+  window.addEventListener('beforeunload', advertirAntesDeSalir);
 });
 watch(() => route.params.semanaId, async () => {
   cargando.value = true;
   error.value = '';
   try { await cargar(); } catch (e) { error.value = e.message; }
   finally { cargando.value = false; }
+  actualizarTiempo();
 });
+onBeforeRouteLeave(() => confirmarSalida());
+onUnmounted(() => { clearInterval(intervalo); window.removeEventListener('beforeunload', advertirAntesDeSalir); });
 </script>
 
 <template>
@@ -78,6 +119,8 @@ watch(() => route.params.semanaId, async () => {
     <p v-else-if="error" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{{ error }}</p>
     <div v-else-if="!semana" class="empty-state"><p>No hay una semana abierta.</p><router-link :to="{ name: 'clasificacion-temporada' }" class="auth-link mt-3 inline-block">Ver clasificación</router-link></div>
     <template v-else>
+      <section v-if="tiempoRestante && !cerrado" class="rounded-2xl p-4 text-white shadow-sm" :class="urgencia === 'critica' ? 'bg-quiniela-rojo' : urgencia === 'alta' ? 'bg-orange-600' : 'bg-quiniela-azul'"><div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"><div><p class="text-xs font-bold uppercase tracking-widest text-white/80">Tiempo para cerrar</p><p class="text-2xl font-bold tabular-nums">{{ tiempoRestante.dias }}d {{ String(tiempoRestante.horas).padStart(2, '0') }}h {{ String(tiempoRestante.minutos).padStart(2, '0') }}m {{ String(tiempoRestante.segundos).padStart(2, '0') }}s</p></div><p class="text-sm text-white/90">Guarda tus pronósticos antes del cierre.</p></div></section>
+      <p v-if="hayCambiosPendientes && urgencia === 'critica'" role="status" class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">El cierre es inminente. Guarda tu quiniela cuanto antes.</p>
       <div v-if="!auth.isLoggedIn" class="flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-quiniela-azulOscuro sm:flex-row sm:items-center sm:justify-between"><span>Inicia sesión o crea tu cuenta para guardar tus pronósticos.</span><button type="button" @click="loginModalStore.abrir()" class="min-h-11 rounded-lg bg-quiniela-azul px-4 py-2 font-semibold text-white">Iniciar sesión</button></div>
       <p v-if="auth.isLoggedIn && participacion && participacion.estado_pago !== 'pagado'" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Tu pago de temporada está {{ participacion.estado_pago === 'revision' ? 'en revisión' : 'pendiente' }}. Esto no bloquea tu participación durante el plazo de pago.</p>
       <section v-if="auth.isLoggedIn && juegosActivos.length" class="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm sm:p-5" aria-live="polite">

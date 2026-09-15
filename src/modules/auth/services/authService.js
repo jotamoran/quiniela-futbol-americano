@@ -10,7 +10,16 @@ export async function registrar({ email, password, nombreCompleto, username, tem
 }
 
 export async function verificarCodigo({ email, codigo }) {
-  const { error } = await supabase.auth.verifyOtp({ email, token: codigo, type: 'signup' });
+  const token = String(codigo ?? '').replace(/\s/g, '');
+  if (!/^\d{6}$/.test(token)) throw new Error('El código debe contener exactamente 6 dígitos.');
+  const { error } = await supabase.auth.verifyOtp({ email: String(email ?? '').trim(), token, type: 'signup' });
+  if (error) throw error;
+}
+
+export async function reenviarCodigo(email) {
+  const correo = String(email ?? '').trim();
+  if (!correo) throw new Error('Indica el correo de tu cuenta.');
+  const { error } = await supabase.auth.resend({ type: 'signup', email: correo });
   if (error) throw error;
 }
 

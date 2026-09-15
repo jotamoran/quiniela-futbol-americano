@@ -10,6 +10,7 @@ const nombreCompleto = ref('');
 const email = ref('');
 const username = ref('');
 const password = ref('');
+const confirmarPassword = ref('');
 const cargando = ref(false);
 const temporada = ref(null);
 const opcionPago = ref('pendiente');
@@ -34,6 +35,10 @@ async function onSubmit() {
     if (!temporada.value) throw new Error('No hay una temporada abierta para inscripciones.');
     if (opcionPago.value === 'reportar' && referenciaPago.value.trim().length < 3) {
       await alertaError(new Error('Escribe la referencia o últimos dígitos de la transferencia.'), 'Falta la referencia');
+      return;
+    }
+    if (password.value !== confirmarPassword.value) {
+      await alertaError(new Error('Las contraseñas no coinciden.'), 'Verifica tu contraseña');
       return;
     }
     await registrar({
@@ -69,6 +74,7 @@ onMounted(async () => {
       <label class="form-label">Correo<input v-model="email" type="email" autocomplete="email" placeholder="correo@ejemplo.com" required class="form-control min-h-11" /></label>
       <label class="form-label">Nombre de usuario<input v-model="username" type="text" autocomplete="username" placeholder="letras, números y _ (3-20)" required minlength="3" maxlength="20" pattern="[a-z0-9_]{3,20}" class="form-control min-h-11" @input="username = username.toLowerCase()" /></label>
       <CampoPassword v-model="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres" :minlength="6" />
+      <CampoPassword v-model="confirmarPassword" label="Confirmar contraseña" autocomplete="new-password" placeholder="Repite tu contraseña" :minlength="6" />
       <fieldset v-if="temporada" class="space-y-2 rounded-xl border border-gray-200 p-3">
         <legend class="px-1 text-sm font-semibold text-gray-700">Pago de temporada</legend>
         <label class="flex cursor-pointer gap-2 text-sm"><input v-model="opcionPago" type="radio" value="pendiente" /> Lo pagaré después</label>

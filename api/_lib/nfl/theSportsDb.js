@@ -1,16 +1,37 @@
 const API_BASE_URL = 'https://www.thesportsdb.com/api/v1/json';
 const FINAL_STATUSES = new Set(['FT', 'AET', 'PEN', 'Match Finished', 'Final']);
+const LIVE_STATUSES = new Set(['1H', '2H', 'HT', 'ET', 'P', 'Live', 'In Play', 'Half Time']);
+const REQUEST_TIMEOUT_MS = 8000;
+const MAX_RETRIES = 2;
 export const NFL_LEAGUE_ID = '4391';
 export const NFL_PROVIDER = 'thesportsdb';
 
 function apiKey() {
-  return process.env.SPORTSDB_API_KEY || '123';
+  const key = process.env.SPORTSDB_API_KEY?.trim();
+  if (key) return key;
+  if (process.env.NODE_ENV !== 'production') return '123';
+  throw new Error('Falta configurar la clave del servicio deportivo');
 }
 
 async function request(endpoint) {
-  const response = await fetch(`${API_BASE_URL}/${apiKey()}/${endpoint}`);
-  if (!response.ok) throw new Error(`El servicio deportivo respondió ${response.status}`);
-  return response.json();
+  let ultimoError;
+  for (let intento = 0; intento <= MAX_RETRIES; intento += 1) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await fetch(`${API_BASE_URL}/${apiKey()}/${endpoint}`, { signal: controller.signal });
+      if (response.status === 429 || response.status >= 500) throw new Error(`Respuesta temporal ${response.status}`);
+      if (!response.ok) throw new Error(`El servicio deportivo respondió ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      ultimoError = error.name === 'AbortError' ? new Error('El servicio deportivo tardó demasiado en responder') : error;
+      if (intento === MAX_RETRIES) throw ultimoError;
+      await new Promise((resolve) => setTimeout(resolve, 250 * (intento + 1)));
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+  throw ultimoError;
 }
 
 export function normalizeEvent(event) {
@@ -33,6 +54,12 @@ export function resultFromEvent(event) {
   return { homeScore, awayScore };
 }
 
+export function estadoFromEvent(event) {
+  if (FINAL_STATUSES.has(event?.strStatus) || String(event?.strProgress ?? '').toLowerCase() === 'final') return 'finalizado';
+  if (LIVE_STATUSES.has(event?.strStatus) || String(event?.strProgress ?? '').toLowerCase().includes('live')) return 'en_curso';
+  return 'pendiente';
+}
+
 export async function getWeekEvents(year, week) {
   const payload = await request(`eventsround.php?id=${NFL_LEAGUE_ID}&r=${week}&s=${year}`);
   return (payload.events ?? [])
@@ -45,7 +72,10 @@ export async function getEventResults(ids) {
   const results = new Map();
   await Promise.all([...new Set(ids.map(String))].map(async (id) => {
     const payload = await request(`lookupevent.php?id=${encodeURIComponent(id)}`);
-    results.set(id, resultFromEvent(payload.events?.[0]));
+    const event = payload.events?.[0];
+    const resultado = resultFromEvent(event);
+    const estado = estadoFromEvent(event);
+    results.set(id, resultado ? { ...resultado, estado } : { estado });
   }));
   return results;
 }

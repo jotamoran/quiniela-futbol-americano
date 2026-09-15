@@ -1,16 +1,19 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { useLoginModalStore } from '@/store/loginModal';
-import { obtenerTemporadaActiva } from '@/services/nflService';
+import { useAuthStore } from '@/store/auth';
+import { obtenerTemporadaActual } from '@/services/nflService';
 import { fechaCortaCDMX } from '@/lib/fechas';
 
 const loginModal = useLoginModalStore();
+const auth = useAuthStore();
 const temporada = ref(null);
 const cargando = ref(true);
 const cuota = computed(() => temporada.value ? Number(temporada.value.cuota).toLocaleString('es-MX') : '2,500');
+const temporadaActiva = computed(() => temporada.value?.estado === 'activa');
 
 onMounted(async () => {
-  try { temporada.value = await obtenerTemporadaActiva(); } catch { temporada.value = null; }
+  try { temporada.value = await obtenerTemporadaActual(); } catch { temporada.value = null; }
   finally { cargando.value = false; }
 });
 </script>
@@ -24,8 +27,10 @@ onMounted(async () => {
           <h1 class="mt-3 max-w-3xl text-4xl font-bold leading-tight sm:text-5xl">Vive cada partido. Suma puntos. Gana cada semana.</h1>
           <p class="mt-5 max-w-2xl text-lg leading-relaxed text-blue-100">Elige quién gana, marca tus pronósticos y sigue tu posición durante toda la temporada NFL.</p>
           <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-            <router-link :to="{ name: 'registro' }" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-quiniela-rojo px-6 py-3 font-bold text-white transition hover:bg-quiniela-rojoOscuro">Crear mi cuenta</router-link>
-            <button type="button" @click="loginModal.abrir()" class="min-h-12 rounded-xl border border-white/40 px-6 py-3 font-bold text-white transition hover:bg-white/10">Ya tengo cuenta</button>
+            <router-link v-if="!auth.isLoggedIn && temporadaActiva" :to="{ name: 'registro' }" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-quiniela-rojo px-6 py-3 font-bold text-white transition hover:bg-quiniela-rojoOscuro">Crear mi cuenta</router-link>
+            <router-link v-if="auth.isLoggedIn" :to="{ name: 'mi-temporada' }" class="inline-flex min-h-12 items-center justify-center rounded-xl bg-quiniela-rojo px-6 py-3 font-bold text-white transition hover:bg-quiniela-rojoOscuro">Ir a mi temporada</router-link>
+            <router-link v-if="!auth.isLoggedIn && !temporadaActiva" :to="{ name: 'clasificacion-temporada' }" class="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/40 px-6 py-3 font-bold text-white transition hover:bg-white/10">Ver clasificación</router-link>
+            <button v-if="!auth.isLoggedIn && temporadaActiva" type="button" @click="loginModal.abrir()" class="min-h-12 rounded-xl border border-white/40 px-6 py-3 font-bold text-white transition hover:bg-white/10">Ya tengo cuenta</button>
           </div>
         </div>
         <div class="rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur sm:p-8">
@@ -47,8 +52,8 @@ onMounted(async () => {
 
       <section class="mt-10 rounded-3xl border border-blue-100 bg-blue-50 p-6 sm:p-8">
         <div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div><p class="eyebrow">Inscripción de temporada</p><h2 class="mt-1 text-2xl font-bold text-quiniela-azulOscuro">Participa desde {{ temporada?.nombre ?? 'la temporada NFL' }}</h2><p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">Cuota de inscripción: <strong>${{ cuota }}</strong>. Puedes dejar el pago pendiente y reportarlo después; la fecha límite es {{ cargando ? '30 de septiembre' : temporada ? fechaCortaCDMX(temporada.fecha_limite_pago) : '30 de septiembre' }}.</p></div>
-          <router-link :to="{ name: 'registro' }" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-quiniela-azul px-5 py-2.5 font-bold text-white">Ver registro</router-link>
+          <div><p class="eyebrow">{{ temporadaActiva ? 'Inscripción de temporada' : 'Temporada concluida' }}</p><h2 class="mt-1 text-2xl font-bold text-quiniela-azulOscuro">{{ temporada?.nombre ?? 'La temporada NFL' }}</h2><p class="mt-2 max-w-2xl text-sm leading-relaxed text-gray-600">{{ temporadaActiva ? `Cuota de inscripción: $${cuota}. Puedes dejar el pago pendiente y reportarlo después; la fecha límite es ${cargando ? '30 de septiembre' : fechaCortaCDMX(temporada.fecha_limite_pago)}.` : 'Consulta la clasificación y los resultados definitivos de la temporada.' }}</p></div>
+          <router-link :to="{ name: auth.isLoggedIn ? 'mi-temporada' : 'clasificacion-temporada' }" class="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-quiniela-azul px-5 py-2.5 font-bold text-white">{{ auth.isLoggedIn ? 'Ir a mi temporada' : temporadaActiva ? 'Ver registro' : 'Ver clasificación' }}</router-link>
         </div>
       </section>
     </section>
