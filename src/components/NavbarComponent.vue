@@ -1,0 +1,108 @@
+<script setup>
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { useAuthStore } from '@/store/auth';
+import { useLoginModalStore } from '@/store/loginModal';
+import { useRoute, useRouter } from 'vue-router';
+import { confirmarAccion } from '@/lib/alertas';
+
+const authStore = useAuthStore();
+const loginModalStore = useLoginModalStore();
+const route = useRoute();
+const router = useRouter();
+const menuAbierto = ref(false);
+const adminAbierto = ref(false);
+const nav = ref(null);
+const esRutaAdmin = computed(() => String(route.name ?? '').startsWith('admin-'));
+
+function cerrarDesplegables() {
+  menuAbierto.value = false;
+  adminAbierto.value = false;
+}
+
+function alPuntero(evento) {
+  if (!nav.value?.contains(evento.target)) cerrarDesplegables();
+}
+
+function alTeclado(evento) {
+  if (evento.key === 'Escape') cerrarDesplegables();
+}
+
+watch(() => route.fullPath, cerrarDesplegables);
+onMounted(() => {
+  document.addEventListener('pointerdown', alPuntero);
+  window.addEventListener('keydown', alTeclado);
+});
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', alPuntero);
+  window.removeEventListener('keydown', alTeclado);
+});
+
+async function salir() {
+  const confirmed = await confirmarAccion({ title: 'Cerrar sesión', text: 'Tendrás que iniciar sesión nuevamente.', confirmText: 'Salir' });
+  if (!confirmed) return;
+  await authStore.cerrarSesion();
+  // Solo forzamos ir a /login si la página actual de verdad lo requiere.
+  // llenar-quiniela ya es pública: al cerrar sesión ahí, se queda en la
+  // misma pantalla y el propio "necesitaLogin" la vuelve a bloquear sola.
+  if (route.meta.requiresAuth) router.push({ name: 'login' });
+}
+
+function cerrarMenu() {
+  menuAbierto.value = false;
+}
+</script>
+
+<template>
+  <nav ref="nav" class="sticky top-0 z-40 bg-quiniela-azulOscuro px-4 py-3 text-white shadow-lg sm:px-6">
+    <div class="mx-auto flex max-w-7xl items-center justify-between">
+      <router-link :to="{ name: authStore.isLoggedIn ? 'mi-temporada' : 'clasificacion-temporada' }" class="flex items-center gap-2 rounded-lg focus-visible:outline-offset-4">
+        <img src="@assets/logo.png" alt="Quiniela NFL" class="h-8 w-8 rounded-full" />
+        <span class="font-bold">Quiniela NFL</span>
+      </router-link>
+
+      <div class="hidden items-center gap-2 text-sm md:flex">
+        <router-link :to="{ name: 'clasificacion-temporada' }" class="nav-link">Clasificación</router-link>
+        <router-link :to="{ name: 'llenar-quiniela' }" class="nav-link">Jugar</router-link>
+        <template v-if="authStore.isLoggedIn">
+          <router-link :to="{ name: 'mi-temporada' }" class="nav-link">Mi temporada</router-link>
+          <router-link :to="{ name: 'mi-cuenta' }" class="nav-link">Mi cuenta</router-link>
+          <div v-if="authStore.isAdmin" class="relative"><button type="button" @click="adminAbierto = !adminAbierto" class="nav-link flex min-h-11 items-center gap-1" :class="esRutaAdmin ? 'bg-white/15 text-white' : ''" :aria-expanded="adminAbierto" aria-haspopup="menu">Administración <span class="text-xs" aria-hidden="true">▾</span></button><div v-if="adminAbierto" role="menu" class="absolute right-0 mt-2 w-60 rounded-xl border border-gray-100 bg-white p-2 text-gray-700 shadow-2xl"><router-link v-for="item in [{ name: 'admin-jornadas', label: 'Temporada y semanas' }, { name: 'admin-participantes', label: 'Participantes y pagos' }, { name: 'admin-sincronizar', label: 'Resultados y registros' }]" :key="item.name" :to="{ name: item.name }" role="menuitem" @click="adminAbierto = false" class="block min-h-11 rounded-lg px-3 py-2.5 hover:bg-blue-50 hover:text-quiniela-azul">{{ item.label }}</router-link></div></div>
+          <button @click="salir" class="rounded-lg bg-quiniela-rojo px-3 py-2 font-semibold text-white">Salir</button>
+        </template>
+        <button v-else type="button" @click="loginModalStore.abrir()" class="rounded-lg bg-quiniela-rojo px-3 py-2 font-semibold text-white">Iniciar sesión</button>
+      </div>
+
+      <!-- Botón hamburguesa en móvil -->
+      <button
+        class="grid h-11 w-11 place-items-center rounded-lg text-white hover:bg-white/10 md:hidden"
+        @click="menuAbierto = !menuAbierto"
+        :aria-label="menuAbierto ? 'Cerrar menú' : 'Abrir menú'"
+        :aria-expanded="menuAbierto"
+        aria-controls="menu-principal-movil"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path v-if="!menuAbierto" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <div v-if="menuAbierto" id="menu-principal-movil" class="mx-auto mt-3 flex max-w-7xl flex-col gap-1 border-t border-white/20 pt-3 text-sm md:hidden">
+      <router-link :to="{ name: 'clasificacion-temporada' }" @click="cerrarMenu" class="mobile-nav-link">Clasificación</router-link>
+      <router-link :to="{ name: 'llenar-quiniela' }" @click="cerrarMenu" class="mobile-nav-link">Jugar</router-link>
+      <template v-if="authStore.isLoggedIn">
+        <p class="px-3 pb-1 text-xs font-bold uppercase tracking-widest text-white/60">Mi cuenta</p>
+        <router-link :to="{ name: 'mi-temporada' }" @click="cerrarMenu" class="mobile-nav-link">Mi temporada</router-link>
+        <router-link :to="{ name: 'mi-cuenta' }" @click="cerrarMenu" class="mobile-nav-link">Mi cuenta</router-link>
+        <template v-if="authStore.isAdmin">
+          <p class="mt-2 px-3 pb-1 text-xs font-bold uppercase tracking-widest text-white/60">Administración</p>
+          <router-link :to="{ name: 'admin-jornadas' }" @click="cerrarMenu" class="mobile-nav-link">Temporada y semanas</router-link>
+          <router-link :to="{ name: 'admin-participantes' }" @click="cerrarMenu" class="mobile-nav-link">Participantes y pagos</router-link>
+          <router-link :to="{ name: 'admin-sincronizar' }" @click="cerrarMenu" class="mobile-nav-link">Resultados y registros</router-link>
+        </template>
+        <button @click="salir(); cerrarMenu()" class="mt-2 min-h-11 rounded-lg bg-quiniela-rojo px-3 py-2 font-semibold text-white">Cerrar sesión</button>
+      </template>
+      <button v-else type="button" @click="loginModalStore.abrir(); cerrarMenu()" class="mt-2 min-h-11 rounded-lg bg-quiniela-rojo px-3 py-2 font-semibold text-white">Iniciar sesión</button>
+    </div>
+  </nav>
+</template>
