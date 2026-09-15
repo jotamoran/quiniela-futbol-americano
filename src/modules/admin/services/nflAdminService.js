@@ -19,3 +19,7 @@ export function buscarSemanaNFL(year, week) {
 export function sincronizarResultadosNFL(weekId) {
   return llamarApi('sync-results', { method: 'POST', body: JSON.stringify({ weekId }) });
 }
+
+export function buscarEquiposNFL(search) {
+  return llamarApi(`teams?${new URLSearchParams({ search })}`);
+}

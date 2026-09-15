@@ -56,8 +56,7 @@ function cerrarMenu() {
   <nav ref="nav" class="sticky top-0 z-40 bg-quiniela-azulOscuro px-4 py-3 text-white shadow-lg sm:px-6">
     <div class="mx-auto flex max-w-7xl items-center justify-between">
       <router-link :to="{ name: authStore.isLoggedIn ? 'mi-temporada' : 'clasificacion-temporada' }" class="flex items-center gap-2 rounded-lg focus-visible:outline-offset-4">
-        <img src="@assets/logo.png" alt="Quiniela NFL" class="h-8 w-8 rounded-full" />
-        <span class="font-bold">Quiniela NFL</span>
+        <img src="@assets/logo.png" alt="Quiniela Futbol Americano" class="h-10 w-36 object-contain object-left sm:w-44" />
       </router-link>
 
       <div class="hidden items-center gap-2 text-sm md:flex">

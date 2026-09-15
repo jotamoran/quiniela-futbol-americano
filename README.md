@@ -16,13 +16,13 @@ Plataforma de quinielas NFL por temporada (Vue 3 + Tailwind + Supabase + Vercel)
 4. Para un proyecto real en supabase.com: `npx supabase link` y `npx supabase db push`.
 5. Después de registrar la primera cuenta, asígnale el rol de administrador desde el editor SQL: `update public.perfiles set rol = 'admin' where username = 'TU_USUARIO';`.
 
-El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accidente el modelo de fútbol soccer. Las migraciones son la fuente vigente. En una base existente aplica `supabase/migrations/202609150001_nfl_provider.sql` para habilitar la importación de calendario y resultados.
+El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accidente el modelo de fútbol soccer. Las migraciones son la fuente vigente. En una base existente aplica `supabase/migrations/202609150001_nfl_provider.sql` y después `supabase/migrations/202609150002_reglas_admin.sql`. Ambas son seguras para reintentar si una ejecución anterior quedó incompleta.
 
 ## Calendario y resultados NFL
 
-El panel de administración consulta TheSportsDB (liga NFL `4391`). Desde **Temporada y semanas** se carga una semana por número, se revisan los partidos, se elige el partido de desempate y se publica. Desde **Resultados y registros** se sincronizan los marcadores finales; la captura manual permanece disponible.
+El panel de administración consulta automáticamente el calendario NFL. Desde **Temporada y semanas** se carga una semana por número, se revisan los partidos, se eligen el partido de desempate y el partido underdog, y se publica. Desde **Resultados y registros** se sincronizan los marcadores finales; la captura manual permanece disponible.
 
-Configura `SPORTSDB_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; para producción se recomienda una clave propia del proveedor.
+Configura `SPORTSDB_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; para producción se recomienda una clave propia del servicio.
 
 ## Pruebas
 

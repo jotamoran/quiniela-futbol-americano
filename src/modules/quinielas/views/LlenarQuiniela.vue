@@ -13,7 +13,7 @@ const semana = ref(null);
 const juegos = ref([]);
 const participacion = ref(null);
 const elecciones = ref({});
-const underdogId = ref('');
+const underdogId = computed(() => juegos.value.find(j => j.underdog && j.estado !== 'cancelado')?.id ?? '');
 const total = ref('');
 const cargando = ref(true);
 const guardando = ref(false);
@@ -26,7 +26,6 @@ async function cargar() {
   juegos.value = [];
   participacion.value = null;
   elecciones.value = {};
-  underdogId.value = '';
   total.value = '';
   semana.value = await obtenerSemana(route.params.semanaId ?? null);
   if (!semana.value) return;
@@ -37,7 +36,6 @@ async function cargar() {
   const existente = await obtenerMiPronostico(semana.value.id, participacion.value.id);
   if (existente) {
     elecciones.value = existente.elecciones;
-    underdogId.value = existente.underdog_juego_id;
     total.value = existente.total_desempate;
   }
 }
@@ -45,7 +43,8 @@ async function cargar() {
 async function guardar() {
   guardando.value = true;
   try {
-    await guardarPronosticos({ semanaId: semana.value.id, elecciones: elecciones.value, underdogId: underdogId.value, total: Number(total.value) });
+    const eleccionesActivas = Object.fromEntries(juegos.value.filter(j => j.estado !== 'cancelado').map(j => [j.id, elecciones.value[j.id]]));
+    await guardarPronosticos({ semanaId: semana.value.id, elecciones: eleccionesActivas, underdogId: underdogId.value, total: Number(total.value) });
     await alertaExito('Pronósticos guardados', 'Puedes modificarlos hasta el cierre de la semana.');
     router.push({ name: 'mi-temporada' });
   } catch (e) { await alertaError(e, 'No se pudieron guardar los pronósticos'); }
@@ -74,8 +73,9 @@ watch(() => route.params.semanaId, async () => {
       <p v-if="!auth.isLoggedIn" class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-quiniela-azulOscuro">Inicia sesión o crea tu cuenta para guardar tus pronósticos.</p>
       <p v-if="participacion?.estado_pago !== 'pagado'" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Tu pago de temporada está {{ participacion?.estado_pago === 'revision' ? 'en revisión' : 'pendiente' }}. Esto no bloquea tu participación durante el plazo de pago.</p>
       <div class="grid gap-4 sm:grid-cols-2">
-        <TarjetaPartido v-for="juego in juegos" :key="juego.id" v-model="elecciones[juego.id]" :juego="juego" :underdog="underdogId === juego.id" :disabled="cerrado || !auth.isLoggedIn" @underdog="underdogId = juego.id" />
+        <TarjetaPartido v-for="juego in juegos" :key="juego.id" v-model="elecciones[juego.id]" :juego="juego" :disabled="cerrado || !auth.isLoggedIn" />
       </div>
+      <p v-if="!underdogId" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">El administrador todavía no define el partido underdog. Podrás guardar cuando quede seleccionado.</p>
       <section v-if="juegos.length" class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 class="font-bold text-quiniela-azulOscuro">Puntos totales del partido de desempate</h2>
         <p class="mt-1 text-sm text-gray-500">Se usa únicamente entre participantes empatados; gana quien acierte o quede más cerca.</p>

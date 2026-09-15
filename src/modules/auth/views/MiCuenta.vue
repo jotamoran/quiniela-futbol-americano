@@ -106,7 +106,7 @@ onMounted(async () => {
     </header>
 
     <section class="flex items-center gap-4 rounded-2xl bg-quiniela-azulOscuro p-4 text-white shadow-sm sm:p-5">
-      <img src="@assets/logo.png" alt="" class="h-14 w-14 shrink-0 rounded-full object-contain" />
+      <img src="@assets/logo.png" alt="Quiniela Futbol Americano" class="h-auto w-36 shrink-0 object-contain sm:w-44" />
       <div class="min-w-0"><p class="truncate font-bold">{{ authStore.perfil?.nombre_completo }}</p><p class="truncate text-sm text-blue-100">@{{ authStore.perfil?.username }}</p></div>
     </section>
 

@@ -1,12 +1,12 @@
 begin;
 
 alter table public.juegos
-  add column provider text,
-  add column external_event_id text,
-  add column logo_visitante text,
-  add column logo_local text;
+  add column if not exists provider text,
+  add column if not exists external_event_id text,
+  add column if not exists logo_visitante text,
+  add column if not exists logo_local text;
 
-create unique index juegos_semana_provider_evento
+create unique index if not exists juegos_semana_provider_evento
   on public.juegos(semana_id, provider, external_event_id)
   where provider is not null and external_event_id is not null;
 

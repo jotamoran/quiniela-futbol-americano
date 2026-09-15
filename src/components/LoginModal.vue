@@ -71,12 +71,12 @@ onUnmounted(() => {
   <div v-if="loginModalStore.abierto" ref="modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-titulo" aria-describedby="login-modal-descripcion" class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/55 px-3 py-4 backdrop-blur-[2px] sm:px-4 sm:py-6" @click.self="loginModalStore.cerrar()">
     <form @submit.prevent="onSubmit" class="relative max-h-[calc(100dvh-2rem)] w-full max-w-sm space-y-4 overflow-y-auto rounded-3xl bg-white p-5 shadow-2xl sm:max-h-[calc(100dvh-3rem)] sm:p-8">
       <button type="button" @click="loginModalStore.cerrar()" class="absolute right-3 top-3 grid h-11 w-11 place-items-center rounded-full text-2xl leading-none text-gray-400 transition hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-quiniela-azul focus-visible:ring-offset-2 sm:right-4 sm:top-4" aria-label="Cerrar">×</button>
-      <div class="flex justify-center px-12">
-        <img src="@assets/logo.png" alt="" class="h-16 w-16 rounded-full object-contain sm:h-[4.5rem] sm:w-[4.5rem]" />
+      <div class="flex justify-center px-8">
+        <img src="@assets/logo.png" alt="Quiniela Futbol Americano" class="h-auto w-full max-w-[15rem] object-contain" />
       </div>
       <div class="space-y-1 text-center">
         <h2 id="login-modal-titulo" class="text-2xl font-bold text-quiniela-azulOscuro">Inicia sesión</h2>
-        <p id="login-modal-descripcion" class="text-sm text-gray-500">Entra para registrar y consultar tus quinielas.</p>
+        <p id="login-modal-descripcion" class="text-sm text-gray-500">Entra para participar y consultar tu temporada.</p>
       </div>
       <label class="form-label">Correo o usuario<input ref="emailInput" v-model="entrada" type="text" autocomplete="username" placeholder="correo@ejemplo.com o tu usuario" required class="form-control" /></label>
       <CampoPassword v-model="password" placeholder="Tu contraseña" />

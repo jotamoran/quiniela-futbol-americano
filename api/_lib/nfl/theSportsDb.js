@@ -9,7 +9,7 @@ function apiKey() {
 
 async function request(endpoint) {
   const response = await fetch(`${API_BASE_URL}/${apiKey()}/${endpoint}`);
-  if (!response.ok) throw new Error(`TheSportsDB respondió ${response.status}`);
+  if (!response.ok) throw new Error(`El servicio deportivo respondió ${response.status}`);
   return response.json();
 }
 
@@ -48,4 +48,12 @@ export async function getEventResults(ids) {
     results.set(id, resultFromEvent(payload.events?.[0]));
   }));
   return results;
+}
+
+export async function searchNflTeams(search) {
+  const payload = await request(`searchteams.php?t=${encodeURIComponent(search)}`);
+  return (payload.teams ?? [])
+    .filter((team) => team.strSport === 'American Football' && (String(team.idLeague) === NFL_LEAGUE_ID || team.strLeague === 'NFL'))
+    .map((team) => ({ id: String(team.idTeam), name: team.strTeam, logo: team.strBadge || team.strTeamBadge || null }))
+    .slice(0, 10);
 }

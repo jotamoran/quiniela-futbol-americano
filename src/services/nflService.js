@@ -125,3 +125,8 @@ export async function guardarResultados(semanaId, resultados) {
   const { error } = await supabase.rpc('nfl_guardar_resultados', { p_semana: semanaId, p_resultados: resultados });
   if (error) throw error;
 }
+
+export async function configurarJuego(juegoId, { underdog, cancelado }) {
+  const { error } = await supabase.rpc('nfl_configurar_juego', { p_juego: juegoId, p_underdog: underdog, p_cancelado: cancelado });
+  if (error) throw error;
+}

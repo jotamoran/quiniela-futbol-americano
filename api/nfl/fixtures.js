@@ -8,7 +8,7 @@ export default async function handler(req, res) {
     const year = Number(req.query.year);
     const week = Number(req.query.week);
     if (!Number.isInteger(year) || year < 2020 || year > 2100) throw new ErrorHttp(400, 'Año inválido');
-    if (!Number.isInteger(week) || week < 1 || week > 30) throw new ErrorHttp(400, 'Semana inválida');
+    if (!Number.isInteger(week) || week < 1 || week > 18) throw new ErrorHttp(400, 'La temporada regular usa semanas del 1 al 18');
     const games = await getWeekEvents(year, week);
     return res.status(200).json({ games });
   } catch (error) {

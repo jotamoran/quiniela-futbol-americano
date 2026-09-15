@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const sql = readFileSync(new URL('../../supabase/migrations/202609140001_nfl.sql', import.meta.url), 'utf8');
 const providerSql = readFileSync(new URL('../../supabase/migrations/202609150001_nfl_provider.sql', import.meta.url), 'utf8');
+const rulesSql = readFileSync(new URL('../../supabase/migrations/202609150002_reglas_admin.sql', import.meta.url), 'utf8');
 
 describe('contrato del esquema NFL', () => {
   it('crea las entidades de temporada y una temporada inicial', () => {
@@ -26,9 +27,17 @@ describe('contrato del esquema NFL', () => {
   });
 
   it('conserva identificadores del proveedor sin duplicar partidos', () => {
-    expect(providerSql).toContain('add column external_event_id text');
+    expect(providerSql).toContain('add column if not exists external_event_id text');
     expect(providerSql).toContain('juegos_semana_provider_evento');
     expect(providerSql).toContain('logo_visitante');
     expect(providerSql).not.toMatch(/drop\s+(table|schema)/i);
+  });
+
+  it('deja underdog y desempate bajo control del administrador', () => {
+    expect(rulesSql).toContain('add column if not exists underdog boolean');
+    expect(rulesSql).toContain('nfl_configurar_juego');
+    expect(rulesSql).toContain('juego_underdog_unico');
+    expect(rulesSql).toContain('cercanos=1');
+    expect(rulesSql).not.toMatch(/drop\s+(table|schema)/i);
   });
 });

@@ -44,8 +44,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
     .form-label { @apply block text-sm font-semibold text-gray-700; }
     .form-control { @apply mt-1 min-h-11 w-full rounded-xl border-gray-300; }
     .auth-page { @apply flex min-h-dvh items-center justify-center bg-[radial-gradient(circle_at_top,_#e8eff7_0,_#f2f2f2_46%,_#f2f2f2_100%)] px-4 py-6 sm:py-10; }
-    .auth-card { @apply w-full max-w-sm space-y-4 rounded-3xl border border-white/80 bg-white p-5 shadow-xl shadow-blue-950/10 sm:p-8; }
-    .auth-logo { @apply mx-auto h-[4.5rem] w-[4.5rem] rounded-full object-contain shadow-sm; }
+    .auth-card { @apply w-full max-w-md space-y-4 rounded-3xl border border-white/80 bg-white p-5 shadow-xl shadow-blue-950/10 sm:p-8; }
+    .auth-logo { @apply mx-auto h-auto w-full max-w-[17rem] object-contain; }
     .auth-title { @apply text-center text-2xl font-bold text-quiniela-azulOscuro; }
     .auth-description { @apply text-center text-sm leading-relaxed text-gray-500; }
     .primary-action { @apply min-h-11 w-full rounded-xl bg-quiniela-rojo px-4 py-2.5 font-semibold text-white transition hover:bg-quiniela-rojoOscuro disabled:cursor-wait disabled:opacity-60; }
