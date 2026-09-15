@@ -82,7 +82,8 @@ watch(() => route.params.semanaId, async () => {
       <section v-if="juegos.length" class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 class="font-bold text-quiniela-azulOscuro">Puntos totales del partido de desempate</h2>
         <p class="mt-1 text-sm text-gray-500">Se usa únicamente entre participantes empatados; gana quien acierte o quede más cerca.</p>
-        <input v-model="total" type="number" min="0" max="400" inputmode="numeric" :disabled="cerrado || !auth.isLoggedIn" class="form-control max-w-xs" placeholder="Ej. 47" />
+        <label for="total-desempate" class="form-label mt-3 max-w-xs">Puntos estimados</label>
+        <input id="total-desempate" v-model="total" type="number" min="0" max="400" inputmode="numeric" :disabled="cerrado || !auth.isLoggedIn" class="form-control max-w-xs" placeholder="Ej. 47" />
       </section>
       <button v-if="auth.isLoggedIn && !cerrado" :disabled="!completo || guardando" @click="guardar" class="w-full rounded-xl bg-quiniela-rojo px-5 py-3 font-bold text-white disabled:opacity-40">{{ guardando ? 'Guardando…' : 'Guardar quiniela semanal' }}</button>
       <p v-if="cerrado" class="rounded-xl bg-gray-200 p-4 text-center font-semibold text-gray-700">La recepción de pronósticos está cerrada.</p>

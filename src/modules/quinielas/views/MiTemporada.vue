@@ -55,7 +55,8 @@ onMounted(async () => {
           <span class="rounded-full px-3 py-1 text-sm font-bold" :class="participacion?.estado_pago === 'pagado' ? 'bg-green-100 text-green-800' : participacion?.estado_pago === 'revision' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">{{ participacion?.estado_pago === 'pagado' ? 'Pagado' : participacion?.estado_pago === 'revision' ? 'En revisión' : 'Pendiente' }}</span>
         </div>
         <form v-if="participacion && participacion.estado_pago === 'pendiente'" @submit.prevent="enviarPago" class="mt-4 flex flex-col gap-2 sm:flex-row">
-          <input v-model="referencia" required minlength="3" maxlength="200" class="form-control mt-0 flex-1" placeholder="Referencia o últimos dígitos de transferencia" />
+          <label for="referencia-pago" class="sr-only">Referencia o últimos dígitos de transferencia</label>
+          <input id="referencia-pago" v-model="referencia" required minlength="3" maxlength="200" class="form-control mt-0 flex-1" placeholder="Referencia o últimos dígitos de transferencia" />
           <button :disabled="reportando" class="rounded-xl bg-quiniela-rojo px-5 py-2 font-bold text-white disabled:opacity-50">{{ reportando ? 'Enviando…' : 'Reportar pago' }}</button>
         </form>
       </section>

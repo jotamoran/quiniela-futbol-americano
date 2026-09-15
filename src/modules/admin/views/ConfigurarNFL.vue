@@ -19,12 +19,21 @@ function fechaIso(valor) { return new Date(valor).toISOString(); }
 function fechaLocal(valor) {
   return fechaInputCDMX(valor);
 }
+function prepararSiguienteSemana() {
+  const siguiente = Math.min(18, Math.max(0, ...semanas.value.map((semana) => Number(semana.numero) || 0)) + 1);
+  const formularioVacio = juegos.value.length === 1 && !juegos.value[0].visitante && !juegos.value[0].local && !juegos.value[0].fecha_partido;
+  if (formularioVacio && !semanaForm.value.fecha_cierre) {
+    semanaForm.value.numero = siguiente;
+    semanaForm.value.nombre = `Semana ${siguiente}`;
+  }
+}
 
 async function cargar() {
   temporada.value = await obtenerTemporadaActiva();
   if (temporada.value) {
     Object.assign(temporadaForm.value, temporada.value, { fecha_limite_pago: fechaInputCDMX(temporada.value.fecha_limite_pago) });
     semanas.value = await listarSemanas(temporada.value.id);
+    prepararSiguienteSemana();
   }
 }
 async function guardarDatosTemporada() {
@@ -90,7 +99,7 @@ onMounted(cargar);
       <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"><div><h2 class="font-bold text-quiniela-azulOscuro">Nueva semana</h2><p class="text-sm text-gray-500">Carga el calendario automáticamente o agrega partidos manuales.</p></div><button type="button" @click="importarSemana" :disabled="buscando || guardando" class="min-h-11 rounded-xl border border-quiniela-azul px-4 py-2 font-semibold text-quiniela-azul disabled:opacity-50">{{ buscando ? 'Consultando…' : 'Cargar calendario automáticamente' }}</button></div>
       <div class="grid gap-3 sm:grid-cols-3"><label class="form-label">Número<input v-model="semanaForm.numero" type="number" min="1" max="18" required class="form-control" /><span class="mt-1 block text-xs font-normal text-gray-500">Temporada regular: semanas 1 a 18.</span></label><label class="form-label">Nombre<input v-model="semanaForm.nombre" required class="form-control" /></label><label class="form-label">Cierre de pronósticos<input v-model="semanaForm.fecha_cierre" type="datetime-local" required class="form-control" /><span class="mt-1 block text-xs font-normal text-gray-500">Se propone 5 minutos antes del primer partido; puedes modificarlo.</span></label></div>
       <div class="space-y-3"><article v-for="(juego, index) in juegos" :key="juego.external_event_id || index" class="rounded-2xl border border-gray-200 p-3 sm:p-4"><div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.15fr]"><EquipoNFLAutocomplete v-model="juego.visitante" label="Visitante" /><EquipoNFLAutocomplete v-model="juego.local" label="Local" /><label class="form-label">Fecha del partido<input v-model="juego.fecha_partido" type="datetime-local" required class="form-control" /></label></div><div class="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between"><div class="flex flex-wrap gap-x-5 gap-y-2"><label class="flex min-h-11 items-center gap-2 text-sm font-semibold"><input v-model="juego.desempate" type="radio" name="desempate" :value="true" @change="juegos.forEach((j, i) => j.desempate = i === index)" /> Partido de desempate</label><label class="flex min-h-11 items-center gap-2 text-sm font-semibold text-quiniela-rojoOscuro"><input v-model="juego.underdog" type="radio" name="underdog" :value="true" @change="juegos.forEach((j, i) => j.underdog = i === index)" /> Partido underdog</label></div><button v-if="juegos.length > 1" type="button" @click="juegos.splice(index, 1)" class="min-h-11 self-start rounded-lg px-3 text-sm font-semibold text-red-700 hover:bg-red-50">Quitar partido</button></div></article></div>
-      <div class="flex flex-wrap gap-2"><button type="button" :disabled="juegos.length >= 16" @click="juegos.push(nuevoJuego())" class="rounded-xl border border-quiniela-azul px-4 py-2 font-semibold text-quiniela-azul">Agregar partido</button><button :disabled="!valido || guardando" class="rounded-xl bg-quiniela-rojo px-5 py-2 font-bold text-white disabled:opacity-40">Publicar semana</button></div>
+      <div class="flex flex-wrap gap-2"><button type="button" :disabled="juegos.length >= 16" @click="juegos.push(nuevoJuego())" class="rounded-xl border border-quiniela-azul px-4 py-2 font-semibold text-quiniela-azul">Agregar partido</button><button :disabled="!valido || guardando" class="rounded-xl bg-quiniela-rojo px-5 py-2 font-bold text-white disabled:opacity-40">Publicar semana</button></div><p v-if="!valido" class="text-sm text-amber-700">Completa equipos y fechas, y selecciona un partido de desempate y uno underdog para publicar.</p>
     </form>
     <section><h2 class="mb-3 text-xl font-bold text-quiniela-azulOscuro">Semanas publicadas</h2><div class="grid gap-2 sm:grid-cols-2"><div v-for="semana in semanas" :key="semana.id" class="rounded-xl bg-white p-4 shadow-sm"><strong>{{ semana.nombre }}</strong><p class="text-sm text-gray-500">{{ semana.estado }} · {{ fechaHoraCDMX(semana.fecha_cierre) }} · CDMX</p></div></div></section>
   </main>
