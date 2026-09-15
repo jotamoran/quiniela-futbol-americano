@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import { alertaError, alertaExito, confirmarAccion } from '@/lib/alertas';
 import { fechaHoraCDMX, fechaInputCDMX } from '@/lib/fechas';
 import { crearSemana, finalizarTemporada, guardarTemporada, listarParticipantes, listarSemanas, obtenerJuegos, obtenerTemporadaActual, rankingSemanal } from '@/services/nflService';
-import { buscarSemanaNFL } from '../services/nflAdminService';
+import { buscarSemanaNFL, sincronizarMomiosNFL } from '../services/nflAdminService';
 import EquipoNFLAutocomplete from '../components/EquipoNFLAutocomplete.vue';
 
 const temporada = ref(null);
@@ -98,7 +98,7 @@ async function importarSemana() {
 async function publicarSemana() {
   guardando.value = true;
   try {
-    await crearSemana({ ...semanaForm.value, temporada_id: temporada.value.id, fecha_cierre: fechaIso(semanaForm.value.fecha_cierre) }, juegos.value.map(j => ({
+    const semanaId = await crearSemana({ ...semanaForm.value, temporada_id: temporada.value.id, fecha_cierre: fechaIso(semanaForm.value.fecha_cierre) }, juegos.value.map(j => ({
       equipo_visitante: j.visitante.name,
       equipo_local: j.local.name,
       fecha_partido: fechaIso(j.fecha_partido),
@@ -108,8 +108,15 @@ async function publicarSemana() {
       logo_visitante: j.visitante.logo,
       logo_local: j.local.logo,
     })));
+    let detalle = 'La semana quedó publicada.';
+    try {
+      const momios = await sincronizarMomiosNFL(semanaId);
+      detalle = momios.unmatched?.length ? `Se identificaron ${momios.updated} no favoritos; ${momios.unmatched.length} quedaron pendientes.` : `Se identificaron ${momios.updated} no favoritos automáticamente.`;
+    } catch {
+      detalle = 'La semana quedó publicada. Actualiza los momios manualmente desde Resultados y registros.';
+    }
     semanaForm.value = { numero: Number(semanaForm.value.numero) + 1, nombre: `Semana ${Number(semanaForm.value.numero) + 1}`, fecha_cierre: '' };
-    juegos.value = [nuevoJuego()]; await cargar(); await alertaExito('Semana publicada');
+    juegos.value = [nuevoJuego()]; await cargar(); await alertaExito('Semana publicada', detalle);
   } catch (e) { await alertaError(e, 'No se pudo publicar la semana'); } finally { guardando.value = false; }
 }
 async function cerrarTemporada() {

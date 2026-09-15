@@ -24,7 +24,7 @@ La verificación de correo está habilitada y usa exactamente seis dígitos. El 
 
 El panel de administración consulta automáticamente el calendario NFL. Desde **Temporada y semanas** se carga una semana por número, se revisan los partidos, se elige el partido de desempate y se publica. Desde **Resultados y registros** se consultan los momios, se identifican los no favoritos y se sincronizan los marcadores; la captura manual permanece disponible.
 
-Configura `SPORTSDB_API_KEY` y `THE_ODDS_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; en producción ambas claves deben estar configuradas. El endpoint `/api/nfl/odds` compara equipos y hora de inicio, determina el lado no favorito y lo guarda antes del cierre. Cada participante elige su partido underdog al llenar la quiniela.
+Configura `SPORTSDB_API_KEY` y `THE_ODDS_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; en producción ambas claves deben estar configuradas. Al publicar una semana se intenta identificar automáticamente el lado no favorito; el endpoint `/api/nfl/odds` compara equipos y hora de inicio y el botón de **Actualizar momios** queda como respaldo antes del cierre. Cada participante elige su partido underdog al llenar la quiniela.
 
 ## Pruebas
 
