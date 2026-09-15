@@ -20,6 +20,10 @@ export function sincronizarResultadosNFL(weekId) {
   return llamarApi('sync-results', { method: 'POST', body: JSON.stringify({ weekId }) });
 }
 
+export function sincronizarMomiosNFL(weekId) {
+  return llamarApi('odds', { method: 'POST', body: JSON.stringify({ weekId }) });
+}
+
 export function buscarEquiposNFL(search) {
   return llamarApi(`teams?${new URLSearchParams({ search })}`);
 }

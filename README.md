@@ -16,15 +16,15 @@ Plataforma de quinielas NFL por temporada (Vue 3 + Tailwind + Supabase + Vercel)
 4. Para un proyecto real en supabase.com: `npx supabase link` y `npx supabase db push`.
 5. Después de registrar la primera cuenta, asígnale el rol de administrador desde el editor SQL: `update public.perfiles set rol = 'admin' where username = 'TU_USUARIO';`.
 
-El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accidente el modelo de fútbol soccer. Las migraciones son la fuente vigente. En una base existente aplica, en orden, `supabase/migrations/202609150001_nfl_provider.sql`, `supabase/migrations/202609150002_reglas_admin.sql` y `supabase/migrations/202609150003_nfl_seguridad_y_cierre.sql`.
+El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accidente el modelo de fútbol soccer. Las migraciones son la fuente vigente. En una base existente aplica, en orden, `supabase/migrations/202609150001_nfl_provider.sql`, `supabase/migrations/202609150002_reglas_admin.sql`, `supabase/migrations/202609150003_nfl_seguridad_y_cierre.sql` y `supabase/migrations/202609150004_nfl_underdog_momios.sql`.
 
 La verificación de correo está habilitada y usa exactamente seis dígitos. El proyecto local ya lo define en `supabase/config.toml`; en el proyecto hospedado confirma en Authentication → Email que la confirmación de correo esté activa, **OTP length** sea `6` y la plantilla use el token de Supabase.
 
 ## Calendario y resultados NFL
 
-El panel de administración consulta automáticamente el calendario NFL. Desde **Temporada y semanas** se carga una semana por número, se revisan los partidos, se eligen el partido de desempate y el partido underdog, y se publica. Desde **Resultados y registros** se sincronizan los marcadores finales; la captura manual permanece disponible.
+El panel de administración consulta automáticamente el calendario NFL. Desde **Temporada y semanas** se carga una semana por número, se revisan los partidos, se elige el partido de desempate y se publica. Desde **Resultados y registros** se consultan los momios, se identifican los no favoritos y se sincronizan los marcadores; la captura manual permanece disponible.
 
-Configura `SPORTSDB_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; para producción se recomienda una clave propia del servicio automático.
+Configura `SPORTSDB_API_KEY` y `THE_ODDS_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; en producción ambas claves deben estar configuradas. El endpoint `/api/nfl/odds` compara equipos y hora de inicio, determina el lado no favorito y lo guarda antes del cierre. Cada participante elige su partido underdog al llenar la quiniela.
 
 ## Pruebas
 

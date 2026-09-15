@@ -5,6 +5,7 @@ const sql = readFileSync(new URL('../../supabase/migrations/202609140001_nfl.sql
 const providerSql = readFileSync(new URL('../../supabase/migrations/202609150001_nfl_provider.sql', import.meta.url), 'utf8');
 const rulesSql = readFileSync(new URL('../../supabase/migrations/202609150002_reglas_admin.sql', import.meta.url), 'utf8');
 const securitySql = readFileSync(new URL('../../supabase/migrations/202609150003_nfl_seguridad_y_cierre.sql', import.meta.url), 'utf8');
+const oddsSql = readFileSync(new URL('../../supabase/migrations/202609150004_nfl_underdog_momios.sql', import.meta.url), 'utf8');
 const authConfig = readFileSync(new URL('../../supabase/config.toml', import.meta.url), 'utf8');
 
 describe('contrato del esquema NFL', () => {
@@ -54,5 +55,13 @@ describe('contrato del esquema NFL', () => {
   it('configura el código de correo en seis dígitos', () => {
     expect(authConfig).toContain('enable_confirmations = true');
     expect(authConfig).toContain('otp_length = 6');
+  });
+
+  it('deja el underdog del partido en momios y el elegido en el pronóstico', () => {
+    expect(oddsSql).toContain('underdog_lado text');
+    expect(oddsSql).toContain('before update of underdog_lado, underdog_fuente, underdog_actualizado_el');
+    expect(oddsSql).toContain('El underdog se determina automáticamente');
+    expect(oddsSql).toContain('Los momios del underdog todavía no están disponibles');
+    expect(oddsSql).not.toContain("Selecciona un único partido underdog");
   });
 });
