@@ -55,11 +55,12 @@ function cerrarMenu() {
 <template>
   <nav ref="nav" class="sticky top-0 z-40 bg-quiniela-azulOscuro px-4 py-3 text-white shadow-lg sm:px-6">
     <div class="mx-auto flex max-w-7xl items-center justify-between">
-      <router-link :to="{ name: authStore.isLoggedIn ? 'mi-temporada' : 'clasificacion-temporada' }" class="flex items-center gap-2 rounded-lg focus-visible:outline-offset-4">
-        <img src="@assets/logo.png" alt="Quiniela Futbol Americano" class="h-10 w-36 object-contain object-left sm:w-44" />
+      <router-link :to="{ name: authStore.isLoggedIn ? 'mi-temporada' : 'inicio' }" class="flex items-center gap-2 rounded-lg focus-visible:outline-offset-4">
+        <img src="@assets/logo.webp" alt="Quiniela Futbol Americano" class="h-10 w-36 object-contain object-left sm:w-44" />
       </router-link>
 
       <div class="hidden items-center gap-2 text-sm md:flex">
+        <router-link :to="{ name: 'inicio' }" class="nav-link">Inicio</router-link>
         <router-link :to="{ name: 'clasificacion-temporada' }" class="nav-link">Clasificación</router-link>
         <router-link :to="{ name: 'llenar-quiniela' }" class="nav-link">Jugar</router-link>
         <template v-if="authStore.isLoggedIn">
@@ -87,6 +88,7 @@ function cerrarMenu() {
     </div>
 
     <div v-if="menuAbierto" id="menu-principal-movil" class="mx-auto mt-3 flex max-w-7xl flex-col gap-1 border-t border-white/20 pt-3 text-sm md:hidden">
+      <router-link :to="{ name: 'inicio' }" @click="cerrarMenu" class="mobile-nav-link">Inicio</router-link>
       <router-link :to="{ name: 'clasificacion-temporada' }" @click="cerrarMenu" class="mobile-nav-link">Clasificación</router-link>
       <router-link :to="{ name: 'llenar-quiniela' }" @click="cerrarMenu" class="mobile-nav-link">Jugar</router-link>
       <template v-if="authStore.isLoggedIn">

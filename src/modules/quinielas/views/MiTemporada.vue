@@ -12,6 +12,7 @@ const referencia = ref('');
 const cargando = ref(true);
 const reportando = ref(false);
 const miRanking = computed(() => ranking.value.find(r => r.participante_id === participacion.value?.id));
+const semanaAbierta = computed(() => semanas.value.find((semana) => semana.estado === 'abierta' && new Date(semana.fecha_cierre) > new Date()));
 
 async function cargar() {
   temporada.value = await obtenerTemporadaActiva();
@@ -49,11 +50,13 @@ onMounted(async () => {
         <div class="rounded-2xl bg-white p-5 shadow-sm"><p class="text-sm text-gray-500">Puntos acumulados</p><strong class="text-2xl text-quiniela-azul">{{ miRanking?.puntos ?? 0 }}</strong></div>
         <div class="rounded-2xl bg-white p-5 shadow-sm"><p class="text-sm text-gray-500">Posición general</p><strong class="text-2xl text-quiniela-rojo">{{ miRanking?.posicion ?? '—' }}</strong></div>
       </section>
+      <section v-if="semanaAbierta" class="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"><div><p class="eyebrow">Semana abierta</p><p class="font-bold text-quiniela-azulOscuro">{{ semanaAbierta.nombre }} recibe tus pronósticos hasta {{ fechaHoraCDMX(semanaAbierta.fecha_cierre) }}.</p></div><router-link :to="{ name: 'llenar-quiniela', params: { semanaId: semanaAbierta.id } }" class="inline-flex min-h-11 items-center justify-center rounded-xl bg-quiniela-azul px-5 py-2.5 font-bold text-white">Jugar ahora</router-link></section>
       <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div><h2 class="font-bold text-quiniela-azulOscuro">Pago de temporada</h2><p class="text-sm text-gray-500">Cuota: ${{ Number(temporada.cuota).toLocaleString('es-MX') }} · límite {{ fechaCortaCDMX(temporada.fecha_limite_pago) }}</p></div>
-          <span class="rounded-full px-3 py-1 text-sm font-bold" :class="participacion?.estado_pago === 'pagado' ? 'bg-green-100 text-green-800' : participacion?.estado_pago === 'revision' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">{{ participacion?.estado_pago === 'pagado' ? 'Pagado' : participacion?.estado_pago === 'revision' ? 'En revisión' : 'Pendiente' }}</span>
+          <span class="rounded-full px-3 py-1 text-sm font-bold" :class="!participacion ? 'bg-gray-100 text-gray-700' : participacion.estado_pago === 'pagado' ? 'bg-green-100 text-green-800' : participacion.estado_pago === 'revision' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">{{ !participacion ? 'Sin inscripción' : participacion.estado_pago === 'pagado' ? 'Pagado' : participacion.estado_pago === 'revision' ? 'En revisión' : 'Pendiente' }}</span>
         </div>
+        <p v-if="!participacion" class="mt-3 text-sm text-gray-600">Tu cuenta todavía no está inscrita en esta temporada.</p>
         <form v-if="participacion && participacion.estado_pago === 'pendiente'" @submit.prevent="enviarPago" class="mt-4 flex flex-col gap-2 sm:flex-row">
           <label for="referencia-pago" class="sr-only">Referencia o últimos dígitos de transferencia</label>
           <input id="referencia-pago" v-model="referencia" required minlength="3" maxlength="200" class="form-control mt-0 flex-1" placeholder="Referencia o últimos dígitos de transferencia" />

@@ -16,7 +16,7 @@ function fecha(fechaPartido) {
     <div class="grid grid-cols-2 gap-3" role="radiogroup" :aria-label="`Pronóstico para ${juego.equipo_visitante} contra ${juego.equipo_local}`">
       <button v-for="opcion in [{ valor: 'V', equipo: juego.equipo_visitante, lugar: 'Visitante', logo: juego.logo_visitante }, { valor: 'L', equipo: juego.equipo_local, lugar: 'Local', logo: juego.logo_local }]" :key="opcion.valor" type="button" role="radio" :disabled="disabled || juego.estado === 'cancelado'" :aria-label="`${opcion.lugar}: ${opcion.equipo}`" :aria-checked="modelValue === opcion.valor" @click="$emit('update:modelValue', opcion.valor)" class="min-h-24 rounded-xl border p-3 text-left transition disabled:opacity-50" :class="modelValue === opcion.valor ? 'border-quiniela-rojo bg-red-50 text-quiniela-rojoOscuro' : 'border-gray-200 hover:border-quiniela-azul'">
         <span class="block text-[10px] font-bold uppercase tracking-widest opacity-60">{{ opcion.lugar }}</span>
-        <span class="mt-2 flex items-center gap-2"><img v-if="opcion.logo" :src="opcion.logo" alt="" class="h-9 w-9 shrink-0 object-contain" /><strong class="block">{{ opcion.equipo }}</strong></span>
+        <span class="mt-2 flex items-center gap-2"><img v-if="opcion.logo" :src="opcion.logo" alt="" loading="lazy" decoding="async" class="h-9 w-9 shrink-0 object-contain" /><strong class="block">{{ opcion.equipo }}</strong></span>
       </button>
     </div>
     <p v-if="juego.underdog" class="mt-3 rounded-xl bg-red-50 px-3 py-2 text-center text-sm font-semibold text-quiniela-rojoOscuro">Tu elección en este partido recibe 2 puntos adicionales si aciertas.</p>

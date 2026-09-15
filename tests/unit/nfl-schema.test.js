@@ -26,7 +26,7 @@ describe('contrato del esquema NFL', () => {
     expect(sql).not.toMatch(/drop\s+(table|schema)/i);
   });
 
-  it('conserva identificadores del proveedor sin duplicar partidos', () => {
+  it('conserva identificadores externos sin duplicar partidos', () => {
     expect(providerSql).toContain('add column if not exists external_event_id text');
     expect(providerSql).toContain('juegos_semana_provider_evento');
     expect(providerSql).toContain('logo_visitante');

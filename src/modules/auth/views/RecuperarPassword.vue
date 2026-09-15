@@ -22,7 +22,7 @@ async function onSubmit() {
 <template>
   <div class="auth-page">
     <form @submit.prevent="onSubmit" class="auth-card">
-      <img src="@assets/logo.png" alt="Quiniela NFL" class="auth-logo" />
+      <img src="@assets/logo.webp" alt="Quiniela NFL" class="auth-logo" />
       <div class="space-y-1"><h1 class="auth-title">Recuperar contraseña</h1><p class="auth-description">Escribe el correo asociado a tu cuenta.</p></div>
       <label class="form-label">Correo<input v-model="email" type="email" autocomplete="email" placeholder="correo@ejemplo.com" required class="form-control min-h-11" /></label>
       <button type="submit" :disabled="cargando" class="primary-action">{{ cargando ? 'Enviando...' : 'Enviar enlace' }}</button>

@@ -1,7 +1,7 @@
 begin;
 
 -- Estas columnas también se aseguran aquí para permitir reintentos seguros
--- aunque la migración del proveedor aún no se haya ejecutado.
+-- aunque la migración del calendario automático aún no se haya ejecutado.
 alter table public.juegos
   add column if not exists provider text,
   add column if not exists external_event_id text,

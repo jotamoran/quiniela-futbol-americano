@@ -26,7 +26,7 @@ async function onSubmit() {
 <template>
   <div class="auth-page">
     <form @submit.prevent="onSubmit" class="auth-card">
-      <img src="@assets/logo.png" alt="Quiniela NFL" class="auth-logo" />
+      <img src="@assets/logo.webp" alt="Quiniela NFL" class="auth-logo" />
       <div class="space-y-1"><h1 class="auth-title">Inicia sesión</h1><p class="auth-description">Entra para participar y consultar tu temporada.</p></div>
       <label class="form-label">Correo o usuario<input v-model="entrada" type="text" autocomplete="username" placeholder="correo@ejemplo.com o tu usuario" required class="form-control" /></label>
       <CampoPassword v-model="password" placeholder="Tu contraseña" />

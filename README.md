@@ -22,7 +22,7 @@ El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accid
 
 El panel de administración consulta automáticamente el calendario NFL. Desde **Temporada y semanas** se carga una semana por número, se revisan los partidos, se eligen el partido de desempate y el partido underdog, y se publica. Desde **Resultados y registros** se sincronizan los marcadores finales; la captura manual permanece disponible.
 
-Configura `SPORTSDB_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; para producción se recomienda una clave propia del servicio.
+Configura `SPORTSDB_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; para producción se recomienda una clave propia del servicio automático.
 
 ## Pruebas
 

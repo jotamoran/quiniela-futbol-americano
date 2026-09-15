@@ -1,11 +1,17 @@
 <script setup>
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { alertaError, alertaExito } from '@/lib/alertas';
 import { actualizarParticipante, listarParticipantes, obtenerTemporadaActiva } from '@/services/nflService';
 
 const temporada = ref(null);
 const participantes = ref([]);
 const guardando = ref('');
+const filtro = ref('');
+const participantesVisibles = computed(() => {
+  const termino = filtro.value.trim().toLowerCase();
+  if (!termino) return participantes.value;
+  return participantes.value.filter((item) => [item.nombre_completo, item.username, item.email, item.telefono].some((valor) => String(valor ?? '').toLowerCase().includes(termino)));
+});
 
 async function cargar() {
   temporada.value = await obtenerTemporadaActiva();
@@ -23,8 +29,9 @@ onMounted(async () => { try { await cargar(); } catch (e) { await alertaError(e,
 <template>
   <main class="page-shell max-w-6xl">
     <header><p class="eyebrow">Administración</p><h1 class="page-title">Participantes</h1><p class="page-description">Gestiona información y pago de toda la temporada.</p></header>
+    <label class="form-label block max-w-xl">Buscar participante<input v-model="filtro" type="search" autocomplete="off" placeholder="Nombre, usuario, correo o teléfono" class="form-control" /></label>
     <div class="grid gap-4">
-      <form v-for="item in participantes" :key="item.id" @submit.prevent="guardar(item)" class="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:grid-cols-6 md:items-end">
+      <form v-for="item in participantesVisibles" :key="item.id" @submit.prevent="guardar(item)" class="grid gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:grid-cols-6 md:items-end">
         <label class="form-label md:col-span-2">Nombre<input v-model="item.nombre_completo" required class="form-control" /></label>
         <div class="text-sm"><p class="font-semibold">@{{ item.username }}</p><p class="break-all text-gray-500">{{ item.email }}</p></div>
         <label class="form-label">Teléfono<input v-model="item.telefono" maxlength="30" class="form-control" /></label>
@@ -35,5 +42,6 @@ onMounted(async () => { try { await cargar(); } catch (e) { await alertaError(e,
       </form>
     </div>
     <p v-if="!participantes.length" class="empty-state">No hay participantes registrados.</p>
+    <p v-else-if="!participantesVisibles.length" class="empty-state">No hay participantes que coincidan con la búsqueda.</p>
   </main>
 </template>

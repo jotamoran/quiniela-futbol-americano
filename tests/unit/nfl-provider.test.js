@@ -7,7 +7,7 @@ const event = (status, home, away) => ({
   strStatus: status, intHomeScore: home, intAwayScore: away,
 });
 
-describe('proveedor NFL TheSportsDB', () => {
+describe('calendario automático NFL', () => {
   it('normaliza partido, semana y orden local/visitante', () => {
     expect(normalizeEvent(event('NS', null, null))).toMatchObject({ externalId: '123', week: 7, home: { name: 'Home' }, away: { name: 'Away' } });
   });

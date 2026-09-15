@@ -63,7 +63,7 @@ onMounted(async () => {
 <template>
   <div class="auth-page">
     <form @submit.prevent="onSubmit" class="auth-card">
-      <img src="@assets/logo.png" alt="Quiniela NFL" class="auth-logo" />
+      <img src="@assets/logo.webp" alt="Quiniela NFL" class="auth-logo" />
       <div class="space-y-1"><h1 class="auth-title">Únete a la temporada</h1><p class="auth-description">{{ temporada ? `${temporada.nombre} · Cuota $${Number(temporada.cuota).toLocaleString('es-MX')}` : 'No hay una temporada abierta' }}</p></div>
       <label class="form-label">Nombre completo<input v-model="nombreCompleto" type="text" autocomplete="name" placeholder="Tu nombre" required class="form-control min-h-11" /></label>
       <label class="form-label">Correo<input v-model="email" type="email" autocomplete="email" placeholder="correo@ejemplo.com" required class="form-control min-h-11" /></label>
