@@ -12,11 +12,17 @@ Plataforma de quinielas NFL por temporada (Vue 3 + Tailwind + Supabase + Vercel)
 
 1. Instala el [Supabase CLI](https://supabase.com/docs/guides/cli).
 2. `npx supabase start` (requiere Docker) para el stack local.
-3. `npx supabase db reset` aplica `supabase/migrations/202609140001_nfl.sql` y crea la temporada NFL 2026.
+3. `npx supabase db reset` aplica las migraciones y crea la temporada NFL 2026.
 4. Para un proyecto real en supabase.com: `npx supabase link` y `npx supabase db push`.
 5. Después de registrar la primera cuenta, asígnale el rol de administrador desde el editor SQL: `update public.perfiles set rol = 'admin' where username = 'TU_USUARIO';`.
 
-El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accidente el modelo de fútbol soccer. La migración indicada arriba es la fuente vigente para una base nueva y también puede pegarse completa en el editor SQL de Supabase.
+El antiguo `supabase/estructura_bd.sql` fue retirado para evitar crear por accidente el modelo de fútbol soccer. Las migraciones son la fuente vigente. En una base existente aplica `supabase/migrations/202609150001_nfl_provider.sql` para habilitar la importación de calendario y resultados.
+
+## Calendario y resultados NFL
+
+El panel de administración consulta TheSportsDB (liga NFL `4391`). Desde **Temporada y semanas** se carga una semana por número, se revisan los partidos, se elige el partido de desempate y se publica. Desde **Resultados y registros** se sincronizan los marcadores finales; la captura manual permanece disponible.
+
+Configura `SPORTSDB_API_KEY` solamente en el servidor. La clave pública gratuita `123` funciona para desarrollo; para producción se recomienda una clave propia del proveedor.
 
 ## Pruebas
 

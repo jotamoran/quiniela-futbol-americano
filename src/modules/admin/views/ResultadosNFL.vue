@@ -2,12 +2,14 @@
 import { onMounted, ref } from 'vue';
 import { alertaError, alertaExito } from '@/lib/alertas';
 import { guardarResultados, listarSemanas, obtenerJuegos, obtenerTemporadaActiva, registrosSemana } from '@/services/nflService';
+import { sincronizarResultadosNFL } from '../services/nflAdminService';
 
 const semanas = ref([]);
 const semanaId = ref('');
 const juegos = ref([]);
 const registros = ref([]);
 const guardando = ref(false);
+const sincronizando = ref(false);
 async function cargarSemanas() { const temporada = await obtenerTemporadaActiva(); semanas.value = temporada ? await listarSemanas(temporada.id) : []; }
 async function cargarSemana() {
   if (!semanaId.value) return;
@@ -21,13 +23,21 @@ async function guardar() {
     await guardarResultados(semanaId.value, resultados); await cargarSemana(); await alertaExito('Resultados guardados');
   } catch (e) { await alertaError(e, 'No se pudieron guardar los resultados'); } finally { guardando.value = false; }
 }
+async function sincronizar() {
+  sincronizando.value = true;
+  try {
+    const respuesta = await sincronizarResultadosNFL(semanaId.value);
+    await cargarSemana();
+    await alertaExito('Resultados sincronizados', `${respuesta.updated} de ${respuesta.checked} partidos actualizados.`);
+  } catch (e) { await alertaError(e, 'No se pudieron sincronizar los resultados'); } finally { sincronizando.value = false; }
+}
 onMounted(async () => { try { await cargarSemanas(); } catch (e) { await alertaError(e); } });
 </script>
 
 <template>
   <main class="page-shell max-w-5xl">
     <header><p class="eyebrow">Administración</p><h1 class="page-title">Resultados y registros</h1><p class="page-description">Captura marcadores y consulta quién entregó su quiniela.</p></header>
-    <label class="form-label max-w-md">Semana<select v-model="semanaId" @change="cargarSemana" class="form-control"><option value="">Selecciona una semana</option><option v-for="semana in semanas" :key="semana.id" :value="semana.id">{{ semana.nombre }}</option></select></label>
+    <div class="flex flex-wrap items-end gap-3"><label class="form-label min-w-64 max-w-md flex-1">Semana<select v-model="semanaId" @change="cargarSemana" class="form-control"><option value="">Selecciona una semana</option><option v-for="semana in semanas" :key="semana.id" :value="semana.id">{{ semana.nombre }}</option></select></label><button v-if="semanaId" type="button" @click="sincronizar" :disabled="sincronizando || guardando" class="min-h-11 rounded-xl border border-quiniela-azul px-4 py-2 font-semibold text-quiniela-azul disabled:opacity-50">{{ sincronizando ? 'Sincronizando…' : 'Sincronizar TheSportsDB' }}</button></div>
     <form v-if="juegos.length" @submit.prevent="guardar" class="space-y-3">
       <article v-for="juego in juegos" :key="juego.id" class="grid gap-3 rounded-2xl bg-white p-4 shadow-sm sm:grid-cols-[1fr_7rem_7rem_10rem] sm:items-end">
         <div><strong>{{ juego.equipo_visitante }} @ {{ juego.equipo_local }}</strong><p v-if="juego.desempate" class="text-xs font-bold text-quiniela-rojo">Partido de desempate</p></div>

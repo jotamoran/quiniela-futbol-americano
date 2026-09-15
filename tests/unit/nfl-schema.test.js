@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const sql = readFileSync(new URL('../../supabase/migrations/202609140001_nfl.sql', import.meta.url), 'utf8');
+const providerSql = readFileSync(new URL('../../supabase/migrations/202609150001_nfl_provider.sql', import.meta.url), 'utf8');
 
 describe('contrato del esquema NFL', () => {
   it('crea las entidades de temporada y una temporada inicial', () => {
@@ -22,5 +23,12 @@ describe('contrato del esquema NFL', () => {
     expect(sql).toContain('alter table participantes_temporada enable row level security');
     expect(sql).toContain('alter table pronosticos_semanales enable row level security');
     expect(sql).not.toMatch(/drop\s+(table|schema)/i);
+  });
+
+  it('conserva identificadores del proveedor sin duplicar partidos', () => {
+    expect(providerSql).toContain('add column external_event_id text');
+    expect(providerSql).toContain('juegos_semana_provider_evento');
+    expect(providerSql).toContain('logo_visitante');
+    expect(providerSql).not.toMatch(/drop\s+(table|schema)/i);
   });
 });
