@@ -2,13 +2,16 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/store/auth';
+import { useLoginModalStore } from '@/store/loginModal';
 import { alertaError, alertaExito } from '@/lib/alertas';
+import { fechaHoraCDMX } from '@/lib/fechas';
 import TarjetaPartido from '../components/TarjetaPartido.vue';
 import { guardarPronosticos, inscribirse, obtenerJuegos, obtenerMiPronostico, obtenerParticipacion, obtenerSemana } from '@/services/nflService';
 
 const route = useRoute();
 const router = useRouter();
 const auth = useAuthStore();
+const loginModalStore = useLoginModalStore();
 const semana = ref(null);
 const juegos = ref([]);
 const participacion = ref(null);
@@ -65,13 +68,13 @@ watch(() => route.params.semanaId, async () => {
 
 <template>
   <main class="page-shell max-w-4xl">
-    <header><p class="eyebrow">Quiniela NFL</p><h1 class="page-title">{{ semana?.nombre ?? 'Semana actual' }}</h1><p v-if="semana" class="page-description">Cierra {{ new Date(semana.fecha_cierre).toLocaleString('es-MX') }} · hora CDMX</p></header>
-    <p v-if="cargando" class="empty-state">Cargando semana…</p>
-    <p v-else-if="error" class="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{{ error }}</p>
+    <header><p class="eyebrow">Quiniela NFL</p><h1 class="page-title">{{ semana?.nombre ?? 'Semana actual' }}</h1><p v-if="semana" class="page-description">Cierra {{ fechaHoraCDMX(semana.fecha_cierre) }} · hora CDMX</p></header>
+    <p v-if="cargando" role="status" aria-live="polite" class="empty-state">Cargando semana…</p>
+    <p v-else-if="error" role="alert" class="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{{ error }}</p>
     <p v-else-if="!semana" class="empty-state">No hay una semana abierta.</p>
     <template v-else>
-      <p v-if="!auth.isLoggedIn" class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-quiniela-azulOscuro">Inicia sesión o crea tu cuenta para guardar tus pronósticos.</p>
-      <p v-if="participacion?.estado_pago !== 'pagado'" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Tu pago de temporada está {{ participacion?.estado_pago === 'revision' ? 'en revisión' : 'pendiente' }}. Esto no bloquea tu participación durante el plazo de pago.</p>
+      <div v-if="!auth.isLoggedIn" class="flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-quiniela-azulOscuro sm:flex-row sm:items-center sm:justify-between"><span>Inicia sesión o crea tu cuenta para guardar tus pronósticos.</span><button type="button" @click="loginModalStore.abrir()" class="min-h-11 rounded-lg bg-quiniela-azul px-4 py-2 font-semibold text-white">Iniciar sesión</button></div>
+      <p v-if="auth.isLoggedIn && participacion && participacion.estado_pago !== 'pagado'" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Tu pago de temporada está {{ participacion.estado_pago === 'revision' ? 'en revisión' : 'pendiente' }}. Esto no bloquea tu participación durante el plazo de pago.</p>
       <div class="grid gap-4 sm:grid-cols-2">
         <TarjetaPartido v-for="juego in juegos" :key="juego.id" v-model="elecciones[juego.id]" :juego="juego" :disabled="cerrado || !auth.isLoggedIn" />
       </div>

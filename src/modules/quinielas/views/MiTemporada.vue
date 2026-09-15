@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { alertaError, alertaExito } from '@/lib/alertas';
+import { fechaHoraCDMX, fechaCortaCDMX } from '@/lib/fechas';
 import { listarSemanas, obtenerParticipacion, obtenerTemporadaActiva, rankingTemporada, reportarPago } from '@/services/nflService';
 
 const temporada = ref(null);
@@ -50,7 +51,7 @@ onMounted(async () => {
       </section>
       <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-3">
-          <div><h2 class="font-bold text-quiniela-azulOscuro">Pago de temporada</h2><p class="text-sm text-gray-500">Cuota: ${{ Number(temporada.cuota).toLocaleString('es-MX') }} · límite {{ new Date(temporada.fecha_limite_pago).toLocaleDateString('es-MX') }}</p></div>
+          <div><h2 class="font-bold text-quiniela-azulOscuro">Pago de temporada</h2><p class="text-sm text-gray-500">Cuota: ${{ Number(temporada.cuota).toLocaleString('es-MX') }} · límite {{ fechaCortaCDMX(temporada.fecha_limite_pago) }}</p></div>
           <span class="rounded-full px-3 py-1 text-sm font-bold" :class="participacion?.estado_pago === 'pagado' ? 'bg-green-100 text-green-800' : participacion?.estado_pago === 'revision' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'">{{ participacion?.estado_pago === 'pagado' ? 'Pagado' : participacion?.estado_pago === 'revision' ? 'En revisión' : 'Pendiente' }}</span>
         </div>
         <form v-if="participacion && participacion.estado_pago === 'pendiente'" @submit.prevent="enviarPago" class="mt-4 flex flex-col gap-2 sm:flex-row">
@@ -62,7 +63,7 @@ onMounted(async () => {
         <div class="grid gap-3 sm:grid-cols-2">
           <article v-for="semana in semanas" :key="semana.id" class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
             <div class="flex items-center justify-between"><strong>{{ semana.nombre }}</strong><span class="text-xs text-gray-500">Semana {{ semana.numero }}</span></div>
-            <p class="mt-1 text-sm text-gray-500">Cierre: {{ new Date(semana.fecha_cierre).toLocaleString('es-MX') }}</p>
+            <p class="mt-1 text-sm text-gray-500">Cierre: {{ fechaHoraCDMX(semana.fecha_cierre) }} · CDMX</p>
             <div class="mt-3 flex gap-2"><router-link :to="{ name: 'llenar-quiniela', params: { semanaId: semana.id } }" class="rounded-lg bg-quiniela-azul px-3 py-2 text-sm font-bold text-white">Pronósticos</router-link><router-link :to="{ name: 'clasificacion-semana', params: { semanaId: semana.id } }" class="rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-quiniela-azul">Tabla</router-link></div>
           </article>
         </div>

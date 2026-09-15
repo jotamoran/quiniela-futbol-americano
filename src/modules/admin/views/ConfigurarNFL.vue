@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue';
 import { alertaError, alertaExito } from '@/lib/alertas';
+import { fechaHoraCDMX, fechaInputCDMX } from '@/lib/fechas';
 import { crearSemana, guardarTemporada, listarSemanas, obtenerTemporadaActiva } from '@/services/nflService';
 import { buscarSemanaNFL } from '../services/nflAdminService';
 import EquipoNFLAutocomplete from '../components/EquipoNFLAutocomplete.vue';
@@ -16,15 +17,13 @@ function nuevoJuego() { return { visitante: null, local: null, fecha_partido: ''
 const valido = computed(() => juegos.value.length && juegos.value.length <= 16 && juegos.value.every(j => j.visitante?.name?.trim() && j.local?.name?.trim() && j.fecha_partido) && juegos.value.filter(j => j.desempate).length === 1 && juegos.value.filter(j => j.underdog).length === 1);
 function fechaIso(valor) { return new Date(valor).toISOString(); }
 function fechaLocal(valor) {
-  const fecha = new Date(valor);
-  const parte = (numero) => String(numero).padStart(2, '0');
-  return `${fecha.getFullYear()}-${parte(fecha.getMonth() + 1)}-${parte(fecha.getDate())}T${parte(fecha.getHours())}:${parte(fecha.getMinutes())}`;
+  return fechaInputCDMX(valor);
 }
 
 async function cargar() {
   temporada.value = await obtenerTemporadaActiva();
   if (temporada.value) {
-    Object.assign(temporadaForm.value, temporada.value, { fecha_limite_pago: new Date(temporada.value.fecha_limite_pago).toISOString().slice(0, 16) });
+    Object.assign(temporadaForm.value, temporada.value, { fecha_limite_pago: fechaInputCDMX(temporada.value.fecha_limite_pago) });
     semanas.value = await listarSemanas(temporada.value.id);
   }
 }
@@ -93,6 +92,6 @@ onMounted(cargar);
       <div class="space-y-3"><article v-for="(juego, index) in juegos" :key="juego.external_event_id || index" class="rounded-2xl border border-gray-200 p-3 sm:p-4"><div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.15fr]"><EquipoNFLAutocomplete v-model="juego.visitante" label="Visitante" /><EquipoNFLAutocomplete v-model="juego.local" label="Local" /><label class="form-label">Fecha del partido<input v-model="juego.fecha_partido" type="datetime-local" required class="form-control" /></label></div><div class="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 sm:flex-row sm:items-center sm:justify-between"><div class="flex flex-wrap gap-x-5 gap-y-2"><label class="flex min-h-11 items-center gap-2 text-sm font-semibold"><input v-model="juego.desempate" type="radio" name="desempate" :value="true" @change="juegos.forEach((j, i) => j.desempate = i === index)" /> Partido de desempate</label><label class="flex min-h-11 items-center gap-2 text-sm font-semibold text-quiniela-rojoOscuro"><input v-model="juego.underdog" type="radio" name="underdog" :value="true" @change="juegos.forEach((j, i) => j.underdog = i === index)" /> Partido underdog</label></div><button v-if="juegos.length > 1" type="button" @click="juegos.splice(index, 1)" class="min-h-11 self-start rounded-lg px-3 text-sm font-semibold text-red-700 hover:bg-red-50">Quitar partido</button></div></article></div>
       <div class="flex flex-wrap gap-2"><button type="button" :disabled="juegos.length >= 16" @click="juegos.push(nuevoJuego())" class="rounded-xl border border-quiniela-azul px-4 py-2 font-semibold text-quiniela-azul">Agregar partido</button><button :disabled="!valido || guardando" class="rounded-xl bg-quiniela-rojo px-5 py-2 font-bold text-white disabled:opacity-40">Publicar semana</button></div>
     </form>
-    <section><h2 class="mb-3 text-xl font-bold text-quiniela-azulOscuro">Semanas publicadas</h2><div class="grid gap-2 sm:grid-cols-2"><div v-for="semana in semanas" :key="semana.id" class="rounded-xl bg-white p-4 shadow-sm"><strong>{{ semana.nombre }}</strong><p class="text-sm text-gray-500">{{ semana.estado }} · {{ new Date(semana.fecha_cierre).toLocaleString('es-MX') }}</p></div></div></section>
+    <section><h2 class="mb-3 text-xl font-bold text-quiniela-azulOscuro">Semanas publicadas</h2><div class="grid gap-2 sm:grid-cols-2"><div v-for="semana in semanas" :key="semana.id" class="rounded-xl bg-white p-4 shadow-sm"><strong>{{ semana.nombre }}</strong><p class="text-sm text-gray-500">{{ semana.estado }} · {{ fechaHoraCDMX(semana.fecha_cierre) }} · CDMX</p></div></div></section>
   </main>
 </template>

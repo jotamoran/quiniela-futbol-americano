@@ -49,7 +49,7 @@ onMounted(async () => { try { await cargarSemanas(); } catch (e) { await alertaE
 
 <template>
   <main class="page-shell max-w-5xl">
-    <header><p class="eyebrow">Administración</p><h1 class="page-title">Resultados y registros</h1><p class="page-description">Configura el partido underdog, cancela partidos, actualiza marcadores y resuelve empates.</p></header>
+    <header><p class="eyebrow">Administración</p><h1 class="page-title">Resultados y registros</h1><p class="page-description">Configura el partido underdog, cancela partidos y actualiza marcadores. El desempate se calcula automáticamente.</p></header>
     <div class="flex flex-col gap-3 sm:flex-row sm:items-end"><label class="form-label min-w-0 max-w-md flex-1">Semana<select v-model="semanaId" @change="cargarSemana" class="form-control"><option value="">Selecciona una semana</option><option v-for="semana in semanas" :key="semana.id" :value="semana.id">{{ semana.nombre }}</option></select></label><button v-if="semanaId" type="button" @click="sincronizar" :disabled="sincronizando || guardando" class="min-h-11 w-full rounded-xl border border-quiniela-azul px-4 py-2 font-semibold text-quiniela-azul disabled:opacity-50 sm:w-auto">{{ sincronizando ? 'Sincronizando…' : 'Actualizar resultados automáticamente' }}</button></div>
     <form v-if="juegos.length" @submit.prevent="guardar" class="space-y-3">
       <article v-for="juego in juegos" :key="juego.id" class="rounded-2xl border bg-white p-4 shadow-sm" :class="juego.estado === 'cancelado' ? 'border-gray-300 bg-gray-50' : juego.underdog ? 'border-red-200' : 'border-transparent'">
