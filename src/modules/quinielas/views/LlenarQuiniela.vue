@@ -30,12 +30,14 @@ const faltantes = computed(() => Math.max(juegosActivos.value.length - seleccion
 const porcentaje = computed(() => juegosActivos.value.length ? Math.round((seleccionados.value / juegosActivos.value.length) * 100) : 0);
 const totalValido = computed(() => total.value !== '' && Number.isInteger(Number(total.value)) && Number(total.value) >= 0 && Number(total.value) <= 400);
 const momiosDisponibles = computed(() => juegosActivos.value.length > 0 && juegosActivos.value.every((juego) => Boolean(juego.underdog_lado)));
-const underdogValido = computed(() => juegosActivos.value.some((juego) => juego.id === underdogId.value));
+const underdogJuego = computed(() => juegosActivos.value.find((juego) => juego.id === underdogId.value));
+const underdogValido = computed(() => Boolean(underdogJuego.value?.underdog_lado && elecciones.value[underdogJuego.value.id] === underdogJuego.value.underdog_lado));
 const completo = computed(() => seleccionados.value === juegosActivos.value.length && underdogValido.value && momiosDisponibles.value && totalValido.value);
 const faltantesFormulario = computed(() => {
   if (faltantes.value > 0) return `Faltan ${faltantes.value} selecciones.`;
   if (!momiosDisponibles.value) return 'Faltan momios para identificar algunos no favoritos.';
-  if (!underdogValido.value) return 'Elige un partido como tu underdog.';
+  if (!underdogId.value) return 'Elige un partido como tu underdog.';
+  if (!underdogValido.value) return 'Selecciona al no favorito en tu partido underdog.';
   if (!totalValido.value) return 'Indica el total del partido de desempate.';
   return 'Todo listo para guardar.';
 });
@@ -144,7 +146,8 @@ onUnmounted(() => { clearInterval(intervalo); window.removeEventListener('before
         <div class="mt-3 h-2 overflow-hidden rounded-full bg-gray-100" role="progressbar" aria-label="Progreso de pronósticos" :aria-valuenow="porcentaje" aria-valuemin="0" aria-valuemax="100"><div class="h-full rounded-full bg-quiniela-rojo transition-all duration-300" :style="{ width: `${porcentaje}%` }"></div></div>
         <p v-if="faltantes" class="mt-2 text-sm text-gray-500">Te {{ faltantes === 1 ? 'falta' : 'faltan' }} {{ faltantes }} {{ faltantes === 1 ? 'partido' : 'partidos' }} por seleccionar.</p>
         <p v-else-if="!momiosDisponibles" class="mt-2 text-sm text-amber-700">Faltan momios para identificar el no favorito de uno o más partidos.</p>
-        <p v-else-if="!underdogValido" class="mt-2 text-sm text-amber-700">Elige un partido como tu underdog.</p>
+        <p v-else-if="!underdogId" class="mt-2 text-sm text-amber-700">Elige un partido como tu underdog.</p>
+        <p v-else-if="!underdogValido" class="mt-2 text-sm text-amber-700">Selecciona al no favorito en tu partido underdog.</p>
         <p v-else-if="!totalValido" class="mt-2 text-sm text-amber-700">Indica un total entre 0 y 400 para el desempate.</p>
         <p v-else class="mt-2 text-sm font-semibold text-green-700">Tu quiniela está lista para guardar.</p>
       </section>
@@ -152,7 +155,8 @@ onUnmounted(() => { clearInterval(intervalo); window.removeEventListener('before
         <TarjetaPartido v-for="juego in juegos" :key="juego.id" v-model="elecciones[juego.id]" :juego="juego" :underdog-seleccionado="underdogId === juego.id" :disabled="cerrado || !auth.isLoggedIn" @seleccionar-underdog="seleccionarUnderdog(juego.id)" />
       </div>
       <p v-if="!momiosDisponibles" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Todavía no están disponibles los momios de todos los partidos. Podrás guardar cuando se identifique cada no favorito.</p>
-      <p v-else-if="!underdogValido" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Elige un partido como tu underdog. Si aciertas al no favorito, sumará 2 puntos adicionales.</p>
+      <p v-else-if="!underdogId" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Elige un partido como tu underdog. Si aciertas al no favorito, sumará 2 puntos adicionales.</p>
+      <p v-else-if="!underdogValido" class="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">Tu partido underdog debe tener seleccionado al equipo marcado como <strong>no favorito</strong>.</p>
       <section v-if="juegos.length" class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-6">
         <h2 class="font-bold text-quiniela-azulOscuro">Puntos totales del partido de desempate</h2>
         <p class="mt-1 text-sm text-gray-500">Se usa únicamente entre participantes empatados; gana quien acierte o quede más cerca.</p>
